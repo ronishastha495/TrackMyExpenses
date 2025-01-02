@@ -1,0 +1,16 @@
+# Ignore Visual Studio/VSCode files
+.vs/
+*.vsidx
+*.vscode/
+
+# Build results
+bin/
+obj/
+
+# Temporary files
+*.tmp
+*.log
+
+# System files
+Thumbs.db
+.DS_Store
