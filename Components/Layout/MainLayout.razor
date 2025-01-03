@@ -1,9 +1,18 @@
 ﻿@inherits LayoutComponentBase
+@inject NavigationManager NavigationManager
+@using Blazored.Modal.Services
+@inject IModalService Modal
+
+<BlazoredModal />
+
 
 <div class="page">
-    <div class="sidebar">
-        <NavMenu />
-    </div>
+    @if (!IsExcludedPage())
+    {
+        <div class="sidebar">
+            <NavMenu />
+        </div>
+    }
 
     <main>
         <article class="content px-4">
@@ -11,3 +20,17 @@
         </article>
     </main>
 </div>
+
+@code {
+    private bool IsExcludedPage()
+    {
+        // List of pages where the sidebar should not appear
+        var excludedPages = new List<string> { "/register", "/" };
+
+        // Get the current URI
+        var currentUri = NavigationManager.Uri.ToLower();
+
+        // Check if the current page matches any excluded page
+        return excludedPages.Any(page => currentUri.Contains(page));
+    }
+}

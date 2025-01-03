@@ -1,0 +1,103 @@
+﻿@page "/"
+@using BudgetEase.Model
+@using BudgetEase.Services
+@inject UserServices UserServices
+@inject NavigationManager NavigationManager
+
+<h3>Login</h3>
+
+<div style="max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
+    <!-- Username Field -->
+    <div style="margin-bottom: 10px;">
+        <label for="username" style="display: block; font-size: 14px; font-weight: bold;">Username</label>
+        <input id="username" @bind="LoginUsername" placeholder="Enter your username"
+               style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+
+    <!-- Password Field -->
+    <div style="margin-bottom: 10px;">
+        <label for="password" style="display: block; font-size: 14px; font-weight: bold;">Password</label>
+        <input id="password" @bind="LoginPassword" type="password" placeholder="Enter your password"
+               style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+
+    <!-- Currency Field -->
+    <div style="margin-bottom: 20px;">
+        <label for="currency" style="display: block; font-size: 14px; font-weight: bold;">Preferred Currency</label>
+        <select id="currency" @bind="PreferredCurrency" 
+                style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="INR">INR</option>
+            <option value="AUD">AUD</option>
+        </select>
+    </div>
+
+    <!-- Login Button -->
+    <button @onclick="HandleLogin" 
+            style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
+        Login
+    </button>
+
+    <!-- Error Message Display -->
+    @if (!string.IsNullOrEmpty(Message))
+    {
+            <p style="color: red; margin-top: 10px;">@Message</p>
+    }
+
+    <!-- Register Link -->
+    <div style="margin-top: 20px; text-align: center;">
+        <p style="font-size: 14px; color: #555;">
+            Don't have an account? <a href="#" @onclick="NavigateToRegister" style="color: #007bff; text-decoration: none;">Register</a>
+        </p>
+    </div>
+</div>
+
+@code {
+    private string LoginUsername = "";
+    private string LoginPassword = "";
+    private string PreferredCurrency = "USD"; // Default currency
+    private string Message = "";
+
+    private List<User> Users = new();
+
+    protected override void OnInitialized()
+    {
+        // Load existing users from UserServices
+        Users = UserServices.LoadUsers();
+    }
+
+    private void HandleLogin()
+    {
+        // Check if all fields are filled
+        if (string.IsNullOrWhiteSpace(LoginUsername) || string.IsNullOrWhiteSpace(LoginPassword))
+        {
+            Message = "Username and password are required.";
+            return;
+        }
+
+        var user = Users.FirstOrDefault(u => u.Username == LoginUsername);
+        if (user == null)
+        {
+            Message = "User not found.";
+            return;
+        }
+
+        if (!UserServices.ValidatePassword(LoginPassword, user.Password))
+        {
+            Message = "Invalid password.";
+            return;
+        }
+
+        // Successful login
+        Message = "Login successful. Redirecting to home...";
+        Task.Delay(2000).ContinueWith(_ => NavigationManager.NavigateTo("/dashboard"));
+    }
+
+    private void NavigateToRegister()
+    {
+        // Redirect to registration page
+        NavigationManager.NavigateTo("/register");
+    }
+}

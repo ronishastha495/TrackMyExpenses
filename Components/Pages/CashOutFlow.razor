@@ -1,0 +1,108 @@
+﻿@page "/add-cash-out"
+@using BudgetEase.Model
+@using BudgetEase.Services
+
+@inject TransactionService TransactionService
+
+<h3>Add Cash Out</h3>
+
+<EditForm Model="@cashOutModel" OnValidSubmit="HandleSubmit" class="max-w-lg mx-auto bg-white p-6 rounded shadow-lg">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-4">
+        <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+        <InputNumber id="amount" @bind-Value="cashOutModel.Amount" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div class="mb-4">
+        <label for="date" class="block text-sm font-medium text-gray-700">Transaction Date</label>
+        <InputDate id="date" @bind-Value="cashOutModel.Date" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div class="mb-4">
+        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+        <InputTextArea id="description" @bind-Value="cashOutModel.Description" rows="3" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div class="mb-4">
+        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+        <select id="category" @bind="cashOutModel.Category" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="expense">Expense</option>
+            <option value="debt_repayment">Debt Repayment</option>
+            <option value="investment_loss">Investment Loss</option>
+            <option value="other">Other</option>
+        </select>
+    </div>
+
+    <div class="text-center">
+        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-full focus:outline-none hover:bg-indigo-700 transition duration-300">Submit</button>
+    </div>
+</EditForm>
+
+<!-- Message Box -->
+@if (isMessageVisible)
+{
+    <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
+        <div class="bg-white p-6 rounded shadow-lg w-1/3 text-center">
+            <h3 class="text-xl font-bold">@messageTitle</h3>
+            <p>@messageContent</p>
+            <button class="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-full" @onclick="CloseMessageBox">Close</button>
+        </div>
+    </div>
+}
+
+@code {
+    private CashOutModel cashOutModel = new CashOutModel();
+    private string messageTitle = string.Empty;
+    private string messageContent = string.Empty;
+    private bool isMessageVisible = false;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            // Map the model to the Transactions object
+            var transaction = new Transactions
+                {
+                    Id = Guid.NewGuid().ToString(), // Generate a new unique ID for the transaction
+                    Amount = cashOutModel.Amount,
+                    Date = cashOutModel.Date,
+                    Description = cashOutModel.Description,
+                    Category = cashOutModel.Category
+                };
+
+            // Save the transaction asynchronously
+            await TransactionService.AddTransactionAsync(transaction);
+
+            // Set the success message
+            messageTitle = "Success!";
+            messageContent = $"Transaction Added: Amount: {transaction.Amount}, Date: {transaction.Date}, Description: {transaction.Description}, Category: {transaction.Category}";
+
+            // Show the success message
+            isMessageVisible = true;
+        }
+        catch (Exception ex)
+        {
+            // Set the error message
+            messageTitle = "Error!";
+            messageContent = $"An error occurred while adding the transaction: {ex.Message}";
+
+            // Show the error message
+            isMessageVisible = true;
+        }
+    }
+
+    private void CloseMessageBox()
+    {
+        isMessageVisible = false;
+    }
+
+    public class CashOutModel
+    {
+        public decimal Amount { get; set; }
+        public DateTime Date { get; set; }
+        public string Description { get; set; }
+        public string Category { get; set; }
+    }
+}

@@ -1,0 +1,23 @@
+[
+  {
+    "Id": "fd16e521-c05e-4cba-9a81-387be0343678",
+    "Amount": 100,
+    "Category": "business",
+    "Description": "Khaja",
+    "Date": "0001-01-23T00:00:00"
+  },
+  {
+    "Id": "cac95f2e-21dc-4645-b90d-7c760fc171e8",
+    "Amount": 150,
+    "Category": "investment",
+    "Description": "Khaja pani",
+    "Date": "0001-01-08T00:00:00"
+  },
+  {
+    "Id": "7bac9a05-0cf4-49d3-9310-6b3394396145",
+    "Amount": 1200,
+    "Category": "debt_repayment",
+    "Description": "hohoho",
+    "Date": "0001-01-08T00:00:00"
+  }
+]

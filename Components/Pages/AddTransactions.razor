@@ -1,0 +1,125 @@
+﻿@page "/add-transaction"
+@using BudgetEase.Model
+@using BudgetEase.Services
+
+@inject TransactionService TransactionService
+
+<h3>Add Cash Inflow</h3>
+
+<EditForm Model="@cashoutModel" OnValidSubmit="HandleSubmit" class="max-w-lg mx-auto bg-white p-6 rounded shadow-lg">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="mb-4">
+        <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+        <InputNumber id="amount" @bind-Value="cashoutModel.Amount" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div class="mb-4">
+        <label for="date" class="block text-sm font-medium text-gray-700">Transaction Date</label>
+        <InputDate id="date" @bind-Value="cashoutModel.Date" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div class="mb-4">
+        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+        <InputTextArea id="description" @bind-Value="cashoutModel.Description" rows="3" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    </div>
+
+    <div class="mb-4">
+        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+        <select id="category" @bind="cashoutModel.Category" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+            <option value="salary">Salary</option>
+            <option value="business">Business</option>
+            <option value="investment">Investment</option>
+            <option value="other">Other</option>
+        </select>
+    </div>
+
+    <!-- Tags Field -->
+    <div class="mb-4">
+        <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
+        <InputText id="tags" @bind-Value="tagsInput" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" placeholder="Comma-separated tags" />
+    </div>
+
+    <!-- Is Debt Field -->
+    <div class="mb-4">
+        <label for="isDebt" class="block text-sm font-medium text-gray-700">Is Debt?</label>
+        <InputCheckbox id="isDebt" @bind-Value="cashoutModel.IsDebt" class="mt-1" />
+    </div>
+
+    @if (cashoutModel.IsDebt)
+    {
+            <div class="mb-4">
+                <label for="debtAmount" class="block text-sm font-medium text-gray-700">Debt Amount</label>
+                <InputNumber id="debtAmount" @bind-Value="cashoutModel.DebtAmount" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+
+            <div class="mb-4">
+                <label for="dueDate" class="block text-sm font-medium text-gray-700">Due Date</label>
+                <InputDate id="dueDate" @bind-Value="cashoutModel.DueDate" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
+    }
+
+    <div class="text-center">
+        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-full focus:outline-none hover:bg-indigo-700 transition duration-300">Submit</button>
+    </div>
+</EditForm>
+
+<!-- Message Box -->
+@if (isMessageVisible)
+{
+            <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
+                <div class="bg-white p-6 rounded shadow-lg w-1/3 text-center">
+                    <h3 class="text-xl font-bold">@messageTitle</h3>
+                    <p>@messageContent</p>
+                    <button class="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-full" @onclick="CloseMessageBox">Close</button>
+                </div>
+            </div>
+}
+
+@code {
+    private Transactions cashoutModel = new Transactions(); // Changed to cashoutModel
+    private string tagsInput = string.Empty;  // Temporary string to store the comma-separated tags
+    private string messageTitle = string.Empty;
+    private string messageContent = string.Empty;
+    private bool isMessageVisible = false;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            // Set transaction type to "cash inflow" (credit)
+            cashoutModel.TransactionType = "credit";  // Cash inflow
+
+            // Generate a unique ID for the transaction
+            cashoutModel.Id = Guid.NewGuid().ToString();
+
+            // Convert the comma-separated tags string into a List<string>
+            cashoutModel.Tags = tagsInput.Split(',').Select(tag => tag.Trim()).ToList();
+
+            // Save the transaction asynchronously
+            await TransactionService.AddTransactionAsync(cashoutModel);
+
+            // Set the success message
+            messageTitle = "Success!";
+            messageContent = $"Transaction Added: Amount: {cashoutModel.Amount}, Date: {cashoutModel.Date}, Description: {cashoutModel.Description}, Category: {cashoutModel.Category}";
+
+            // Show the success message
+            isMessageVisible = true;
+        }
+        catch (Exception ex)
+        {
+            // Set the error message
+            messageTitle = "Error!";
+            messageContent = $"An error occurred while adding the transaction: {ex.Message}";
+
+            // Show the error message
+            isMessageVisible = true;
+        }
+    }
+
+    private void CloseMessageBox()
+    {
+        isMessageVisible = false;
+    }
+}

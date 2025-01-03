@@ -1,6 +1,61 @@
 ﻿@page "/dashboard"
+@using BudgetEase.Components.Layout
+
 <h3>Dashboard</h3>
 
-@code {
+<div class="dashboard-container">
+    <!-- NavMenu Sidebar -->
+    <NavMenu />
 
+    <!-- Main Content -->
+    <div class="main-content">
+        <h2>Dashboard Overview</h2>
+        <div class="summary-cards">
+            <div class="card">
+                <h3>Total Inflows</h3>
+                <p>$0</p>
+            </div>
+            <div class="card">
+                <h3>Total Outflows</h3>
+                <p>$0</p>
+            </div>
+            <div class="card">
+                <h3>Total Debts</h3>
+                <p>$0</p>
+            </div>
+            <div class="card">
+                <h3>Pending Debts</h3>
+                <p>$0</p>
+            </div>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        display: flex;
+    }
+
+    .main-content {
+        width: 100%; /* Adjust width to fill available space */
+        padding: 1rem;
+    }
+
+    .summary-cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+        gap: 1rem;
+    }
+
+    .card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        padding: 1rem;
+        text-align: center;
+        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+</style>
+
+@code {
+    // Add any C# logic or data binding here
 }
