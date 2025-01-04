@@ -6,41 +6,64 @@
 
 <h3>Add Cash Out</h3>
 
-<EditForm Model="@cashOutModel" OnValidSubmit="HandleSubmit" class="max-w-lg mx-auto bg-white p-6 rounded shadow-lg">
+<EditForm Model="@transaction" OnValidSubmit="HandleSubmit"
+          style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
     <DataAnnotationsValidator />
     <ValidationSummary />
 
-    <div class="mb-4">
-        <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
-        <InputNumber id="amount" @bind-Value="cashOutModel.Amount" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    <!-- Amount -->
+    <div style="margin-bottom: 16px;">
+        <label for="amount" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Amount</label>
+        <InputNumber id="amount" @bind-Value="transaction.Amount"
+                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
     </div>
 
-    <div class="mb-4">
-        <label for="date" class="block text-sm font-medium text-gray-700">Transaction Date</label>
-        <InputDate id="date" @bind-Value="cashOutModel.Date" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    <!-- Transaction Date -->
+    <div style="margin-bottom: 16px;">
+        <label for="date" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Transaction Date</label>
+        <InputDate id="date" @bind-Value="transaction.Date"
+                   style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
     </div>
 
-    <div class="mb-4">
-        <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-        <InputTextArea id="description" @bind-Value="cashOutModel.Description" rows="3" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+    <!-- Description -->
+    <div style="margin-bottom: 16px;">
+        <label for="description" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Description</label>
+        <InputTextArea id="description" @bind-Value="transaction.Description" rows="3"
+                       style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
     </div>
 
-    <div class="mb-4">
-        <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-        <select id="category" @bind="cashOutModel.Category" class="mt-1 block w-full px-4 py-2 border border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-            <option value="expense">Expense</option>
-            <option value="debt_repayment">Debt Repayment</option>
-            <option value="investment_loss">Investment Loss</option>
-            <option value="other">Other</option>
-        </select>
+
+    <!-- Category -->
+    <select id="category" @bind="transaction.Category"
+            style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;">
+        <option value="debit">Debit</option>
+        <!-- Add more categories as needed -->
+    </select>
+
+
+    <!-- Notes -->
+    <div style="margin-bottom: 16px;">
+        <label for="notes" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Notes</label>
+        <InputTextArea id="notes" @bind-Value="transaction.Notes" rows="2"
+                       style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
     </div>
 
-    <div class="text-center">
-        <button type="submit" class="px-6 py-2 bg-indigo-600 text-white rounded-full focus:outline-none hover:bg-indigo-700 transition duration-300">Submit</button>
+    <!-- Tags -->
+    <div style="margin-bottom: 16px;">
+        <label for="tags" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Tags (Comma-Separated)</label>
+        <InputText id="tags" @bind-Value="tagsInput"
+                   style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
+    </div>
+
+    <!-- Submit Button -->
+    <div style="text-align: center;">
+        <button type="submit"
+                style="padding: 10px 20px; background: #4f46e5; color: #ffffff; border: none; border-radius: 999px; font-size: 14px; cursor: pointer; transition: background 0.3s;">
+            Submit
+        </button>
     </div>
 </EditForm>
 
-<!-- Message Box -->
 @if (isMessageVisible)
 {
     <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
@@ -53,7 +76,17 @@
 }
 
 @code {
-    private CashOutModel cashOutModel = new CashOutModel();
+    private Transactions transaction = new Transactions();
+    // Initialize transaction in OnInitialized lifecycle method
+    protected override void OnInitialized()
+    {
+        transaction = new Transactions
+            {
+                Category = "debit" // Set default category to "Debit"
+            };
+    }
+
+    private string tagsInput = string.Empty;
     private string messageTitle = string.Empty;
     private string messageContent = string.Empty;
     private bool isMessageVisible = false;
@@ -62,33 +95,33 @@
     {
         try
         {
-            // Map the model to the Transactions object
-            var transaction = new Transactions
-                {
-                    Id = Guid.NewGuid().ToString(), // Generate a new unique ID for the transaction
-                    Amount = cashOutModel.Amount,
-                    Date = cashOutModel.Date,
-                    Description = cashOutModel.Description,
-                    Category = cashOutModel.Category
-                };
+            // Parse tags from input
+            transaction.Tags = string.IsNullOrWhiteSpace(tagsInput)
+                ? new List<string>()
+                : new List<string>(tagsInput.Split(',').Select(tag => tag.Trim()));
 
-            // Save the transaction asynchronously
+            transaction.Id = Guid.NewGuid().ToString(); // Generate unique ID
+            transaction.TransactionType = "Outflow"; // Specify transaction type
+                                                     // Add Notes only if provided
+            if (string.IsNullOrWhiteSpace(transaction.Notes))
+            {
+                transaction.Notes = null;  // Leave Notes as null if it's empty
+            }
+
+
+            // Save transaction
             await TransactionService.AddTransactionAsync(transaction);
 
-            // Set the success message
+            // Success message
             messageTitle = "Success!";
-            messageContent = $"Transaction Added: Amount: {transaction.Amount}, Date: {transaction.Date}, Description: {transaction.Description}, Category: {transaction.Category}";
-
-            // Show the success message
+            messageContent = $"Transaction Added: Amount: {transaction.Amount}, Date: {transaction.Date}, Category: {transaction.Category}, Notes: {transaction.Notes}";
             isMessageVisible = true;
         }
         catch (Exception ex)
         {
-            // Set the error message
+            // Error message
             messageTitle = "Error!";
-            messageContent = $"An error occurred while adding the transaction: {ex.Message}";
-
-            // Show the error message
+            messageContent = $"An error occurred: {ex.Message}";
             isMessageVisible = true;
         }
     }
@@ -96,13 +129,5 @@
     private void CloseMessageBox()
     {
         isMessageVisible = false;
-    }
-
-    public class CashOutModel
-    {
-        public decimal Amount { get; set; }
-        public DateTime Date { get; set; }
-        public string Description { get; set; }
-        public string Category { get; set; }
     }
 }

@@ -1,0 +1,95 @@
+﻿@page "/view-transactions"
+@using BudgetEase.Model
+@using BudgetEase.Services
+
+@inject TransactionService TransactionService
+
+<h1> View Transactions</h1>
+
+
+<div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
+    <h2 style="color: #333; font-size: 2rem; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
+        View Transactions
+    </h2>
+
+    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
+        <!-- Cash Inflows -->
+        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #28a745; font-size: 1.5rem; margin-bottom: 20px;">
+                Cash Inflows
+            </h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                @foreach (var transaction in inflows)
+                {
+                    <li style="background-color: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <strong style="color: #28a745; font-size: 1.2rem;">
+                                +@transaction.Amount.ToString("C")
+                            </strong>
+                            <small style="color: #666;">
+                                @transaction.Date.ToShortDateString()
+                            </small>
+                        </div>
+                        <div style="color: #333; margin: 8px 0;">
+                            @transaction.Description
+                        </div>
+                        <div style="margin-top: 8px;">
+                            @foreach (var tag in transaction.Tags)
+                            {
+                                <span style="display: inline-block; background-color: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; margin-right: 5px;">
+                                    @tag
+                                </span>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+
+        <!-- Cash Outflows -->
+        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+            <h3 style="color: #dc3545; font-size: 1.5rem; margin-bottom: 20px;">
+                Cash Outflows
+            </h3>
+            <ul style="list-style: none; padding: 0; margin: 0;">
+                @foreach (var transaction in outflows)
+                {
+                    <li style="background-color: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
+                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
+                            <strong style="color: #dc3545; font-size: 1.2rem;">
+                                -@transaction.Amount.ToString("C")
+                            </strong>
+                            <small style="color: #666;">
+                                @transaction.Date.ToShortDateString()
+                            </small>
+                        </div>
+                        <div style="color: #333; margin: 8px 0;">
+                            @transaction.Description
+                        </div>
+                        <div style="margin-top: 8px;">
+                            @foreach (var tag in transaction.Tags)
+                            {
+                                <span style="display: inline-block; background-color: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; margin-right: 5px;">
+                                    @tag
+                                </span>
+                            }
+                        </div>
+                    </li>
+                }
+            </ul>
+        </div>
+    </div>
+</div>
+
+@code {
+    private List<Transactions> inflows = new List<Transactions>();
+    private List<Transactions> outflows = new List<Transactions>();
+
+    protected override async Task OnInitializedAsync()
+    {
+        var transactions = await TransactionService.LoadTransactionsAsync();
+        Console.WriteLine($"Loaded transactions: {transactions.Count}");
+        inflows = transactions.Where(t => t.Category == "credit").ToList();
+        outflows = transactions.Where(t => t.Category == "debit").ToList();
+    }
+}

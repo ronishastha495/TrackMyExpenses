@@ -32,9 +32,63 @@ namespace BudgetEase.Services
         // Add a new transaction to the list and save it
         public async Task AddTransactionAsync(Transactions transaction)
         {
+            // Ensure the Category is set (if null, default to "credit" or "debit" as appropriate)
+            if (transaction.Category == null)
+            {
+                // Check if it's an inflow or outflow based on the transaction amount
+                if (transaction.Amount > 0)
+                {
+                    // Set the category for positive amounts (inflows)
+                    // For now, we can default to "credit" but you could adjust this logic as needed
+                    transaction.Category = "credit"; // Inflows (e.g., salary, gain)
+                }
+                else
+                {
+                    // Set the category for negative amounts (outflows)
+                    // You can set it as "debit", "expenses", or "spending" based on your requirement
+                    transaction.Category = "debit"; // Outflows (e.g., expenses, spending)
+                }
+            }
+
+            // Check if it's an outflow (debit) and ensure sufficient balance is available
+            if (transaction.Category == "debit" && transaction.Amount < 0)
+            {
+                // Assuming we have a method to check balance - you should define balance management in your app.
+                decimal availableBalance = await GetAvailableBalanceAsync(); // Implement balance retrieval
+                if (Math.Abs(transaction.Amount) > availableBalance)
+                {
+                    throw new InvalidOperationException("Insufficient balance for this transaction.");
+                }
+            }
+
+            // If it's a debt transaction, set the category explicitly
+            if (transaction.Category == "debt" && transaction.Amount < 0)
+            {
+                // Handle debt logic - potentially check if debt amount is valid or if due date is set
+            }
+
+            // Load the existing transactions and add the new one
             var transactions = await LoadTransactionsAsync();
             transactions.Add(transaction);
+
+            // Save the updated list of transactions
             await SaveTransactionsAsync(transactions);
+        }
+
+
+        // Method to get available balance from transactions
+        public async Task<decimal> GetAvailableBalanceAsync()
+        {
+            var transactions = await LoadTransactionsAsync();
+
+            // Calculate the balance by summing up credits and debits
+            decimal balance = transactions
+                .Where(t => t.Category == "credit")
+                .Sum(t => t.Amount) - transactions
+                .Where(t => t.Category == "debit")
+                .Sum(t => t.Amount);
+
+            return balance;
         }
 
         // Remove a transaction by its ID from the list and save the changes
