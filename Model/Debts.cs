@@ -6,13 +6,15 @@ using System.Threading.Tasks;
 
 namespace BudgetEase.Model
 {
-    public class Debts
+    public class Debt
     {
-        public string Id { get; set; }
-        public decimal Amount { get; set; } // Total amount of the debt
-        public decimal PaidAmount { get; set; } // Amount already paid towards the debt
-        public string Creditor { get; set; } // Name of the person or entity owed money
-        public DateTime DueDate { get; set; } // Date by which the debt should be paid
-        public string Description { get; set; } // Debt description
+        public int Id { get; set; }
+        public string Source { get; set; }
+        public decimal Amount { get; set; }
+        public DateTime DueDate { get; set; }
+        public string Notes { get; set; }
+        public string Tags { get; set; }  // You could store this as a comma-separated string or create a separate table for tags.
+        public bool IsCleared { get; set; } // Track if the debt is cleared or not
     }
+
 }

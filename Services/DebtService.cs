@@ -1,7 +1,7 @@
 ﻿using System;
 using System.Collections.Generic;
+using System.IO;
 using System.Linq;
-using System.Text;
 using System.Text.Json;
 using System.Threading.Tasks;
 using BudgetEase.Model;
@@ -12,51 +12,104 @@ namespace BudgetEase.Services
     {
         private const string FilePath = @"C:\Users\asimk\OneDrive\Desktop\AD\BudgetEase\Data\debts.json"; // Path to store debt data as JSON
 
-        public List<Debts> LoadDebts()
+        // Load the list of debts from the JSON file asynchronously
+        public async Task<List<Debt>> LoadDebtsAsync()
         {
             if (!File.Exists(FilePath))
-                return new List<Debts>();  // Return an empty list if no debts exist
+                return new List<Debt>();  // Return an empty list if no debts exist
 
-            var json = File.ReadAllText(FilePath);
-            return JsonSerializer.Deserialize<List<Debts>>(json) ?? new List<Debts>();
+            var json = await File.ReadAllTextAsync(FilePath);
+            return JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
         }
 
-        public void SaveDebts(List<Debts> debts)
+        // Save the updated list of debts to the JSON file asynchronously
+        public async Task SaveDebtsAsync(List<Debt> debts)
         {
             var json = JsonSerializer.Serialize(debts, new JsonSerializerOptions { WriteIndented = true });
-            File.WriteAllText(FilePath, json);
+            await File.WriteAllTextAsync(FilePath, json);
         }
 
-        public void AddDebt(Debts debt)
+        // Add a new debt to the list and save it
+        public async Task AddDebtAsync(Debt debt)
         {
-            var debts = LoadDebts();
+            // Ensure Debt has all necessary properties
+            if (debt.Source == null)
+                debt.Source = "Unknown"; // Default source if not provided
+
+            // Load the existing debts and add the new one
+            var debts = await LoadDebtsAsync();
             debts.Add(debt);
-            SaveDebts(debts);
+
+            // Save the updated list of debts
+            await SaveDebtsAsync(debts);
         }
 
-        public void RemoveDebt(string debtId)
+        // Remove a debt by its ID from the list and save the changes
+        public async Task RemoveDebtAsync(int debtId)
         {
-            var debts = LoadDebts();
+            var debts = await LoadDebtsAsync();
             var debtToRemove = debts.FirstOrDefault(d => d.Id == debtId);
             if (debtToRemove != null)
             {
                 debts.Remove(debtToRemove);
-                SaveDebts(debts);
+                await SaveDebtsAsync(debts);
             }
         }
 
-        public void UpdateDebt(Debts debt)
+        // Example of updating an existing debt
+        public async Task UpdateDebtAsync(int debtId, Debt updatedDebt)
         {
-            var debts = LoadDebts();
-            var debtToUpdate = debts.FirstOrDefault(d => d.Id == debt.Id);
-            if (debtToUpdate != null)
+            var debts = await LoadDebtsAsync();
+            var existingDebt = debts.FirstOrDefault(d => d.Id == debtId);
+
+            if (existingDebt != null)
             {
-                debtToUpdate.Amount = debt.Amount;
-                debtToUpdate.PaidAmount = debt.PaidAmount;
-                debtToUpdate.Creditor = debt.Creditor;
-                debtToUpdate.DueDate = debt.DueDate;
-                debtToUpdate.Description = debt.Description;
-                SaveDebts(debts);
+                // Update existing debt properties
+                existingDebt.Source = updatedDebt.Source;
+                existingDebt.Amount = updatedDebt.Amount;
+                existingDebt.DueDate = updatedDebt.DueDate;
+                existingDebt.Notes = updatedDebt.Notes;
+                existingDebt.Tags = updatedDebt.Tags;
+                existingDebt.IsCleared = updatedDebt.IsCleared;
+
+                // Save the updated list of debts
+                await SaveDebtsAsync(debts);
+            }
+        }
+
+        // Example of filtering debts by due date range
+        public async Task<List<Debt>> FilterDebtsAsync(DateTime startDate, DateTime endDate)
+        {
+            var debts = await LoadDebtsAsync();
+
+            var filteredDebts = debts.Where(d => d.DueDate >= startDate && d.DueDate <= endDate).ToList();
+
+            return filteredDebts;
+        }
+
+        // Example of searching debts by source (title/description)
+        public async Task<List<Debt>> SearchDebtsAsync(string searchQuery)
+        {
+            var debts = await LoadDebtsAsync();
+
+            var filteredDebts = debts.Where(d => d.Source.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
+
+            return filteredDebts;
+        }
+
+        // Example of clearing a debt (marking it as cleared)
+        public async Task ClearDebtAsync(int debtId)
+        {
+            var debts = await LoadDebtsAsync();
+            var debtToClear = debts.FirstOrDefault(d => d.Id == debtId);
+            if (debtToClear != null && !debtToClear.IsCleared)
+            {
+                debtToClear.IsCleared = true;
+                await SaveDebtsAsync(debts);
+            }
+            else
+            {
+                throw new InvalidOperationException("Debt is already cleared or doesn't exist.");
             }
         }
     }

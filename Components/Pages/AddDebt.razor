@@ -1,0 +1,129 @@
+﻿@page "/add-debt"
+@inject NavigationManager Navigation
+@using BudgetEase.Model
+@using BudgetEase.Services
+
+<h2 style="text-align:center; color: #4CAF50;">Add Debt</h2>
+
+@if (errorMessage != null)
+{
+        <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
+        @errorMessage
+        </div>
+}
+
+<EditForm Model="@debt" OnValidSubmit="HandleSubmit">
+    <DataAnnotationsValidator />
+    <ValidationSummary />
+
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label for="Source" style="font-weight: bold; font-size: 1.1em;">Debt Source:</label>
+        <InputText id="Source" @bind-Value="debt.Source" class="form-control" style="width: 100%; padding: 10px; font-size: 1em;" />
+    </div>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label for="Amount" style="font-weight: bold; font-size: 1.1em;">Amount:</label>
+        <InputNumber id="Amount" @bind-Value="debt.Amount" class="form-control" style="width: 100%; padding: 10px; font-size: 1em;" />
+    </div>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label for="DueDate" style="font-weight: bold; font-size: 1.1em;">Due Date:</label>
+        <InputDate id="DueDate" @bind-Value="debt.DueDate" class="form-control" style="width: 100%; padding: 10px; font-size: 1em;" />
+    </div>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label for="Notes" style="font-weight: bold; font-size: 1.1em;">Notes (Optional):</label>
+        <InputTextArea id="Notes" @bind-Value="debt.Notes" class="form-control" style="width: 100%; padding: 10px; font-size: 1em; height: 120px;" />
+    </div>
+
+    <div class="form-group" style="margin-bottom: 15px;">
+        <label for="Tags" style="font-weight: bold; font-size: 1.1em;">Tags (Optional):</label>
+        <InputText id="Tags" @bind-Value="debt.Tags" class="form-control" style="width: 100%; padding: 10px; font-size: 1em;" />
+    </div>
+
+    <div style="text-align: center;">
+        <button type="submit" class="btn" style="background-color: #4CAF50; color: white; padding: 10px 20px; font-size: 1.1em; border: none; border-radius: 5px; cursor: pointer;">
+            Add Debt
+        </button>
+    </div>
+</EditForm>
+
+<style>
+    body {
+        font-family: Arial, sans-serif;
+        background-color: #f4f4f4;
+        margin: 0;
+        padding: 0;
+    }
+
+    h2 {
+        font-size: 2em;
+        margin-top: 40px;
+        margin-bottom: 20px;
+    }
+
+    .form-group label {
+        display: block;
+        margin-bottom: 5px;
+    }
+
+    .form-control {
+        border: 1px solid #ccc;
+        border-radius: 5px;
+        padding: 10px;
+        font-size: 1em;
+        width: 100%;
+    }
+
+    .btn {
+        font-size: 1.1em;
+        border-radius: 5px;
+        cursor: pointer;
+    }
+
+    .btn:hover {
+        background-color: #45a049;
+    }
+</style>
+
+@if (isMessageVisible)
+{
+        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+            <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+                <h3 style="color: #2c3e50; font-size: 20px; margin-bottom: 1rem; font-weight: 600;">@messageTitle</h3>
+                <p style="color: #4a5568; margin-bottom: 1.5rem;">@messageContent</p>
+                <button @onclick="CloseMessageBox" style="background-color: #4299e1; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; transition: background-color 0.2s; float: right;">Close</button>
+            </div>
+        </div>
+}
+
+@code {
+    private Debt debt = new Debt();
+    private string? errorMessage;
+    private string messageTitle = string.Empty;
+    private string messageContent = string.Empty;
+    private bool isMessageVisible = false;
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            var debtService = new DebtService();
+            await debtService.AddDebtAsync(debt); // Use AddDebtAsync to add debt asynchronously
+
+            messageTitle = "Success";
+            messageContent = "Debt added successfully!";
+            isMessageVisible = true;
+
+        }
+        catch (Exception ex)
+        {
+            errorMessage = $"An error occurred while adding debt: {ex.Message}";
+        }
+    }
+
+    private void CloseMessageBox()
+    {
+        isMessageVisible = false;
+    }
+}
