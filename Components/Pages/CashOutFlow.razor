@@ -3,6 +3,7 @@
 @using BudgetEase.Services
 
 @inject TransactionService TransactionService
+@inject UserServices UserServices
 
 <h3>Add Cash Out</h3>
 
@@ -76,38 +77,46 @@
 }
 
 @code {
-    private Transactions transaction = new Transactions();
-    // Initialize transaction in OnInitialized lifecycle method
-    protected override void OnInitialized()
-    {
-        transaction = new Transactions
-            {
-                Category = "debit" // Set default category to "Debit"
-            };
-    }
+    private Transactions transaction = new Transactions
+        {
+            Date = DateTime.Today, // Correctly initialize Date here
+            Category = "debit" // Set default category to "Debit"
+        };
 
     private string tagsInput = string.Empty;
     private string messageTitle = string.Empty;
     private string messageContent = string.Empty;
     private bool isMessageVisible = false;
 
+    // Handle form submission
     private async Task HandleSubmit()
     {
         try
         {
-            // Parse tags from input
-            transaction.Tags = string.IsNullOrWhiteSpace(tagsInput)
-                ? new List<string>()
-                : new List<string>(tagsInput.Split(',').Select(tag => tag.Trim()));
-
-            transaction.Id = Guid.NewGuid().ToString(); // Generate unique ID
-            transaction.TransactionType = "Outflow"; // Specify transaction type
-                                                     // Add Notes only if provided
-            if (string.IsNullOrWhiteSpace(transaction.Notes))
+            // Get logged-in user's details
+            var loggedInUser =  UserServices.GetLoggedInUser();
+            if (loggedInUser == null)
             {
-                transaction.Notes = null;  // Leave Notes as null if it's empty
+                throw new InvalidOperationException("User is not logged in.");
             }
 
+            // Add the UserName to the transaction
+            transaction.UserName = loggedInUser.UserName;
+
+            // Parse tags from input and ensure it's not null or empty
+            transaction.Tags = string.IsNullOrWhiteSpace(tagsInput)
+                ? new List<string>()
+                : tagsInput.Split(',').Select(tag => tag.Trim()).Where(tag => !string.IsNullOrEmpty(tag)).ToList();
+
+            // Ensure a unique ID and transaction type
+            transaction.Id = Guid.NewGuid().ToString(); // Generate unique ID
+            transaction.TransactionType = "Outflow"; // Specify transaction type
+
+            // Add Notes only if provided, otherwise leave null
+            if (string.IsNullOrWhiteSpace(transaction.Notes))
+            {
+                transaction.Notes = null;
+            }
 
             // Save transaction
             await TransactionService.AddTransactionAsync(transaction);
@@ -116,18 +125,25 @@
             messageTitle = "Success!";
             messageContent = $"Transaction Added: Amount: {transaction.Amount}, Date: {transaction.Date}, Category: {transaction.Category}, Notes: {transaction.Notes}";
             isMessageVisible = true;
+
+            // Optionally reset fields after successful submission
+            transaction = new Transactions { Date = DateTime.Today }; // Reset transaction object
+            tagsInput = string.Empty; // Reset tags input field
         }
         catch (Exception ex)
         {
-            // Error message
+            // Error handling
             messageTitle = "Error!";
             messageContent = $"An error occurred: {ex.Message}";
             isMessageVisible = true;
         }
     }
 
+    // Close the message box
     private void CloseMessageBox()
     {
         isMessageVisible = false;
     }
 }
+
+

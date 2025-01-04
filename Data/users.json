@@ -1,8 +1,14 @@
 [
   {
-    "Username": "Asim",
-    "Password": "So\u002BT6SeG0EpEPscRTX7wdjf27FWrEHklrZQKAVssy2E=",
+    "UserName": "OP",
+    "Password": "a1HUMd9dfxQcvs7M957fPdhhw7QGnwsRZho\u002B76y7qRg=",
+    "Email": "op@gmail.",
+    "PreferredCurrency": "EUR"
+  },
+  {
+    "UserName": "Asim",
+    "Password": "a1HUMd9dfxQcvs7M957fPdhhw7QGnwsRZho\u002B76y7qRg=",
     "Email": "asim@gmail.com",
-    "Currency": null
+    "PreferredCurrency": "EUR"
   }
 ]

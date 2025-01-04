@@ -1,0 +1,164 @@
+﻿@page "/debt-payment"
+@using BudgetEase.Model
+@using BudgetEase.Services
+@inject DebtService DebtService
+@inject TransactionService TransactionService
+@inject UserServices UserServices
+
+<h3>Debt Payment</h3>
+
+<!-- Available Cash Display -->
+<div class="mb-4">
+    <h5>Available Cash: @availableCash</h5>
+</div>
+
+<!-- Display Debt List -->
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th scope="col">Debt Source</th>
+            <th scope="col">Amount</th>
+            <th scope="col">Due Date</th>
+            <th scope="col">Status</th>
+            <th scope="col">Action</th>
+        </tr>
+    </thead>
+    <tbody>
+        @foreach (var debt in debts)
+        {
+            <tr>
+                <td>@debt.Source</td>
+                <td>@debt.Amount</td>
+                <td>@debt.DueDate.ToShortDateString()</td>
+                <td>@(debt.IsCleared ? "Cleared" : "Outstanding")</td>
+                <td>
+                    <button class="btn btn-primary" @onclick="() => SelectDebt(debt)">Make Payment</button>
+                </td>
+            </tr>
+        }
+    </tbody>
+</table>
+
+@if (selectedDebt != null)
+{
+    <h4>Make Payment for @selectedDebt.Source</h4>
+    <div class="mb-3">
+        <label for="paymentAmount" class="form-label">Payment Amount</label>
+        <input type="number" class="form-control" id="paymentAmount" @bind="paymentAmount" min="1" />
+    </div>
+    <button class="btn btn-success" @onclick="MakePayment">Submit Payment</button>
+
+    @if (!string.IsNullOrEmpty(paymentStatus))
+    {
+        <div class="alert alert-info mt-3" role="alert">
+            @paymentStatus
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            @errorMessage
+        </div>
+    }
+}
+
+@code {
+    private decimal TotalInflows { get; set; } = 0;
+    private decimal TotalOutflows { get; set; } = 0;
+    private decimal TotalDebts { get; set; } = 0;
+    private decimal AvailableBalance { get; set; } = 0;
+    private Transactions transaction = new Transactions(); // Assuming you have a Transactions model
+    private string userName = string.Empty; // Class-level variable for userName
+    private List<Debt> debts = new List<Debt>();
+    private Debt selectedDebt;
+    private decimal paymentAmount;
+    private decimal availableCash;
+    private string paymentStatus;
+    private string errorMessage;
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Assuming 'userName' is already defined or retrieved
+            var loggedInUser = UserServices.GetLoggedInUser(); // Make sure this is async
+
+            if (loggedInUser == null)
+            {
+                throw new InvalidOperationException("User is not logged in.");
+            }
+
+            // Fetch available balance for the user (using UserName property from the logged-in user)
+            userName = loggedInUser.UserName;  // Store userName in the class-level variable
+
+            availableCash = await TransactionService.GetAvailableBalanceForUserAsync(userName);
+
+            // Fetch debts from the backend
+            List<Debt> modelDebts = await DebtService.LoadDebtsAsync(userName);
+            debts = modelDebts.Select(d => new Debt
+                {
+                    debtId = d.debtId,
+                    Source = d.Source,
+                    Amount = d.Amount,
+                    DueDate = d.DueDate,
+                    IsCleared = d.IsCleared
+                }).ToList();
+        }
+        catch (Exception ex)
+        {
+            // Handle exceptions
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private void SelectDebt(Debt debt)
+    {
+        selectedDebt = debt;
+    }
+
+    private async Task MakePayment()
+    {
+        if (selectedDebt == null || paymentAmount <= 0)
+        {
+            errorMessage = "Please select a debt and enter a valid payment amount.";
+            return;
+        }
+
+        if (paymentAmount > availableCash)
+        {
+            errorMessage = "Insufficient funds.";
+            return;
+        }
+
+        try
+        {
+            // Use the class-level userName variable for the payment method
+            bool paymentSuccess = await DebtService.DebtPaymentAsync(userName, selectedDebt.debtId, paymentAmount, availableCash);
+
+            if (paymentSuccess)
+            {
+                selectedDebt.Amount -= paymentAmount;
+                availableCash -= paymentAmount;
+
+                // Mark debt as cleared if the amount is fully paid
+                if (selectedDebt.Amount <= 0)
+                {
+                    selectedDebt.IsCleared = true;
+                    selectedDebt.Amount = 0;
+                }
+
+                paymentStatus = "Payment successful!";
+            }
+            else
+            {
+                errorMessage = "Payment failed. Please try again.";
+            }
+        }
+        catch (Exception)
+        {
+            errorMessage = "An error occurred while processing your payment.";
+        }
+    }
+}
+

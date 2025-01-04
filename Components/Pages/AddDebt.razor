@@ -2,14 +2,15 @@
 @inject NavigationManager Navigation
 @using BudgetEase.Model
 @using BudgetEase.Services
+@inject UserServices UserServices
 
 <h2 style="text-align:center; color: #4CAF50;">Add Debt</h2>
 
 @if (errorMessage != null)
 {
-        <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
+    <div style="background-color: #f8d7da; color: #721c24; padding: 10px; margin-bottom: 20px; border-radius: 5px;">
         @errorMessage
-        </div>
+    </div>
 }
 
 <EditForm Model="@debt" OnValidSubmit="HandleSubmit">
@@ -50,64 +51,78 @@
 
 <style>
     body {
-        font-family: Arial, sans-serif;
-        background-color: #f4f4f4;
-        margin: 0;
-        padding: 0;
+    font-family: Arial, sans-serif;
+    background-color: #f4f4f4;
+    margin: 0;
+    padding: 0;
     }
 
     h2 {
-        font-size: 2em;
-        margin-top: 40px;
-        margin-bottom: 20px;
+    font-size: 2em;
+    margin-top: 40px;
+    margin-bottom: 20px;
     }
 
     .form-group label {
-        display: block;
-        margin-bottom: 5px;
+    display: block;
+    margin-bottom: 5px;
     }
 
     .form-control {
-        border: 1px solid #ccc;
-        border-radius: 5px;
-        padding: 10px;
-        font-size: 1em;
-        width: 100%;
+    border: 1px solid #ccc;
+    border-radius: 5px;
+    padding: 10px;
+    font-size: 1em;
+    width: 100%;
     }
 
     .btn {
-        font-size: 1.1em;
-        border-radius: 5px;
-        cursor: pointer;
+    font-size: 1.1em;
+    border-radius: 5px;
+    cursor: pointer;
     }
 
     .btn:hover {
-        background-color: #45a049;
+    background-color: #45a049;
     }
 </style>
 
 @if (isMessageVisible)
 {
-        <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
-            <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
-                <h3 style="color: #2c3e50; font-size: 20px; margin-bottom: 1rem; font-weight: 600;">@messageTitle</h3>
-                <p style="color: #4a5568; margin-bottom: 1.5rem;">@messageContent</p>
-                <button @onclick="CloseMessageBox" style="background-color: #4299e1; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; transition: background-color 0.2s; float: right;">Close</button>
-            </div>
+    <div style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; background-color: rgba(0, 0, 0, 0.5); display: flex; align-items: center; justify-content: center; z-index: 1000;">
+        <div style="background: white; padding: 2rem; border-radius: 12px; max-width: 500px; width: 90%; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
+            <h3 style="color: #2c3e50; font-size: 20px; margin-bottom: 1rem; font-weight: 600;">@messageTitle</h3>
+            <p style="color: #4a5568; margin-bottom: 1.5rem;">@messageContent</p>
+            <button @onclick="CloseMessageBox" style="background-color: #4299e1; color: white; padding: 0.5rem 1rem; border: none; border-radius: 6px; font-size: 0.875rem; cursor: pointer; transition: background-color 0.2s; float: right;">Close</button>
         </div>
+    </div>
 }
 
 @code {
-    private Debt debt = new Debt();
+    private Debt debt = new Debt()
+    {
+            DueDate = DateTime.Today
+    };
     private string? errorMessage;
     private string messageTitle = string.Empty;
     private string messageContent = string.Empty;
     private bool isMessageVisible = false;
+   
 
     private async Task HandleSubmit()
     {
         try
         {
+            // Fetch logged-in user
+            var loggedInUser = UserServices.GetLoggedInUser(); // Make sure it's an async call
+            if (loggedInUser == null)
+            {
+                throw new InvalidOperationException("User is not logged in.");
+            }
+
+            // Set the UserName field to the logged-in user's username
+            debt.UserName = loggedInUser.UserName;
+
             var debtService = new DebtService();
             await debtService.AddDebtAsync(debt); // Use AddDebtAsync to add debt asynchronously
 

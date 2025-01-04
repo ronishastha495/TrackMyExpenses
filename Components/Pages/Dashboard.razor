@@ -1,31 +1,53 @@
 ﻿@page "/dashboard"
-@using BudgetEase.Components.Layout
+@inject NavigationManager Navigation
+@using BudgetEase.Model
+@using BudgetEase.Services
+@inject TransactionService TransactionService
+@inject UserServices UserServices
+@inject DebtService DebtService
 
-<h3>Dashboard</h3>
+<h3 class="text-center my-4">Dashboard</h3>
 
-<div class="dashboard-container">
-    <!-- NavMenu Sidebar -->
+<div class="dashboard-container d-flex">
     <NavMenu />
-
-    <!-- Main Content -->
-    <div class="main-content">
-        <h2>Dashboard Overview</h2>
-        <div class="summary-cards">
-            <div class="card">
-                <h3>Total Inflows</h3>
-                <p>$0</p>
+    <div class="main-content flex-grow-1 p-4">
+        <h2 class="mb-4">Dashboard Overview</h2>
+        <div class="summary-cards row g-4">
+            <!-- Inflows Card -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-success">Total Inflows</h5>
+                        <p class="display-6 fw-bold text-success">@TotalInflows.ToString("C")</p>
+                    </div>
+                </div>
             </div>
-            <div class="card">
-                <h3>Total Outflows</h3>
-                <p>$0</p>
+            <!-- Outflows Card -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-danger">Total Outflows</h5>
+                        <p class="display-6 fw-bold text-danger">@TotalOutflows.ToString("C")</p>
+                    </div>
+                </div>
             </div>
-            <div class="card">
-                <h3>Total Debts</h3>
-                <p>$0</p>
+            <!-- Debts Card -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-primary">Total Debts</h5>
+                        <p class="display-6 fw-bold text-primary">@TotalDebts.ToString("C")</p>
+                    </div>
+                </div>
             </div>
-            <div class="card">
-                <h3>Pending Debts</h3>
-                <p>$0</p>
+            <!-- Available Balance Card -->
+            <div class="col-md-4">
+                <div class="card shadow-sm border-light">
+                    <div class="card-body text-center">
+                        <h5 class="card-title text-info">Available Balance</h5>
+                        <p class="display-6 fw-bold text-info">@AvailableBalance.ToString("C")</p>
+                    </div>
+                </div>
             </div>
         </div>
     </div>
@@ -34,28 +56,92 @@
 <style>
     .dashboard-container {
         display: flex;
+        min-height: 100vh;
+        background-color: #f8f9fa;
     }
 
     .main-content {
-        width: 100%; /* Adjust width to fill available space */
-        padding: 1rem;
+        flex-grow: 1;
+        padding: 1.5rem;
+        background-color: #fff;
+        border-radius: 8px;
     }
 
-    .summary-cards {
-        display: grid;
-        grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
-        gap: 1rem;
-    }
-
-    .card {
+    .summary-cards .card {
         background-color: #fff;
         border: 1px solid #ddd;
-        padding: 1rem;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .card-title {
+        font-size: 1.2rem;
+    }
+
+    .display-6 {
+        font-size: 2.5rem;
+    }
+
+    .text-center {
         text-align: center;
-        box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+    }
+
+    /* Adding some spacing around the dashboard */
+    .my-4 {
+        margin-top: 2rem;
+        margin-bottom: 2rem;
+    }
+
+    /* Adjust card sizes and make them responsive */
+    .card {
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
     }
 </style>
 
 @code {
-    // Add any C# logic or data binding here
+    private decimal TotalInflows { get; set; } = 0;
+    private decimal TotalOutflows { get; set; } = 0;
+    private decimal TotalDebts { get; set; } = 0;
+    private decimal AvailableBalance { get; set; } = 0;
+    private Transactions transaction = new Transactions(); // Assuming you have a Transactions model
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Fetch logged-in user
+            var loggedInUser =  UserServices.GetLoggedInUser(); // Ensure this is an async call
+
+            if (loggedInUser == null)
+            {
+                throw new InvalidOperationException("User is not logged in.");
+            }
+
+            // Add the UserName to the transaction
+            transaction.UserName = loggedInUser.UserName;
+
+            // Fetch the data by passing the logged-in user's username
+            await RefreshData(loggedInUser.UserName);
+        }
+        catch (Exception ex)
+        {
+            // Handle user not logged in or any other exception
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshData(string userName)
+    {
+        // Fetch transaction-related data by passing the userName
+        TotalInflows = await TransactionService.GetTotalInflowsForUserAsync(userName);
+        TotalOutflows = await TransactionService.GetTotalOutflowsForUserAsync(userName);
+        TotalDebts = await DebtService.GetTotalDebtsAsync(userName); // Fetch total debts
+        AvailableBalance = await TransactionService.GetAvailableBalanceForUserAsync(userName); // Fetch available balance
+    }
 }
+
+
+

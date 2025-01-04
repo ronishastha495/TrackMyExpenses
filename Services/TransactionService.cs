@@ -1,101 +1,102 @@
-﻿using System;
-using System.Collections.Generic;
-using System.IO;
-using System.Linq;
-using System.Text.Json;
-using System.Threading.Tasks;
-using BudgetEase.Model;
+﻿using System.Text.Json;
 
 namespace BudgetEase.Services
 {
     public class TransactionService
     {
-        private const string FilePath = @"C:\Users\asimk\OneDrive\Desktop\AD\BudgetEase\Data\transactions.json"; // Path to store transaction data as JSON
+        private const string FilePath = @"C:\Users\asimk\OneDrive\Desktop\AD\BudgetEase\Data\transactions.json";
 
-        // Load the list of transactions from the JSON file asynchronously
+        // Load transactions from the JSON file
         public async Task<List<Transactions>> LoadTransactionsAsync()
         {
             if (!File.Exists(FilePath))
-                return new List<Transactions>();  // Return an empty list if no transactions exist
+                return new List<Transactions>();
 
             var json = await File.ReadAllTextAsync(FilePath);
             return JsonSerializer.Deserialize<List<Transactions>>(json) ?? new List<Transactions>();
         }
 
-        // Save the updated list of transactions to the JSON file asynchronously
+        // Save transactions to the JSON file
         public async Task SaveTransactionsAsync(List<Transactions> transactions)
         {
             var json = JsonSerializer.Serialize(transactions, new JsonSerializerOptions { WriteIndented = true });
             await File.WriteAllTextAsync(FilePath, json);
         }
 
-        // Add a new transaction to the list and save it
+        // Add a new transaction
         public async Task AddTransactionAsync(Transactions transaction)
         {
-            // Ensure the Category is set (if null, default to "credit" or "debit" as appropriate)
-            if (transaction.Category == null)
+            // Ensure UserName is provided and associated with the transaction
+            if (string.IsNullOrEmpty(transaction.UserName))
             {
-                // Check if it's an inflow or outflow based on the transaction amount
-                if (transaction.Amount > 0)
-                {
-                    // Set the category for positive amounts (inflows)
-                    // For now, we can default to "credit" but you could adjust this logic as needed
-                    transaction.Category = "credit"; // Inflows (e.g., salary, gain)
-                }
-                else
-                {
-                    // Set the category for negative amounts (outflows)
-                    // You can set it as "debit", "expenses", or "spending" based on your requirement
-                    transaction.Category = "debit"; // Outflows (e.g., expenses, spending)
-                }
+                throw new ArgumentException("UserName must be provided for the transaction.");
             }
 
-            // Check if it's an outflow (debit) and ensure sufficient balance is available
+            // Set the category if it's null based on the amount
+            if (transaction.Category == null)
+            {
+                transaction.Category = transaction.Amount > 0 ? "credit" : "debit";
+            }
+
+            // If it's a debit transaction and the amount is negative, check the available balance
             if (transaction.Category == "debit" && transaction.Amount < 0)
             {
-                // Assuming we have a method to check balance - you should define balance management in your app.
-                decimal availableBalance = await GetAvailableBalanceAsync(); // Implement balance retrieval
+                decimal availableBalance = await GetAvailableBalanceForUserAsync(transaction.UserName);
                 if (Math.Abs(transaction.Amount) > availableBalance)
                 {
                     throw new InvalidOperationException("Insufficient balance for this transaction.");
                 }
             }
 
-            // If it's a debt transaction, set the category explicitly
-            if (transaction.Category == "debt" && transaction.Amount < 0)
-            {
-                // Handle debt logic - potentially check if debt amount is valid or if due date is set
-            }
-
-            // Load the existing transactions and add the new one
+            // Load current transactions and add the new one
             var transactions = await LoadTransactionsAsync();
             transactions.Add(transaction);
 
-            // Save the updated list of transactions
+            // Save the updated transactions back to the file
             await SaveTransactionsAsync(transactions);
         }
 
-
-        // Method to get available balance from transactions
-        public async Task<decimal> GetAvailableBalanceAsync()
+        // Calculate total inflows for a specific user
+        public async Task<decimal> GetTotalInflowsForUserAsync(string userName)
         {
             var transactions = await LoadTransactionsAsync();
-
-            // Calculate the balance by summing up credits and debits
-            decimal balance = transactions
-                .Where(t => t.Category == "credit")
-                .Sum(t => t.Amount) - transactions
-                .Where(t => t.Category == "debit")
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "credit")
                 .Sum(t => t.Amount);
-
-            return balance;
         }
 
-        // Remove a transaction by its ID from the list and save the changes
-        public async Task RemoveTransactionAsync(string transactionId)
+        // Calculate total outflows for a specific user
+        public async Task<decimal> GetTotalOutflowsForUserAsync(string userName)
         {
             var transactions = await LoadTransactionsAsync();
-            var transactionToRemove = transactions.FirstOrDefault(t => t.Id == transactionId);
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "debit")
+                .Sum(t => Math.Abs(t.Amount));
+        }
+
+        // Get available balance for a specific user
+        public  async Task<decimal> GetAvailableBalanceForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+
+            // Calculate total credit and total debit for a specific user
+            decimal totalCredit = transactions
+                .Where(t => t.UserName == userName && t.Category == "credit")
+                .Sum(t => t.Amount);
+            decimal totalDebit = transactions
+                .Where(t => t.UserName == userName && t.Category == "debit")
+                .Sum(t => t.Amount);
+
+            // Return the available balance for the user
+            return totalCredit - totalDebit;
+        }
+
+        // Remove a transaction by user
+        public async Task RemoveTransactionForUserAsync(string transactionId, string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            var transactionToRemove = transactions
+                .FirstOrDefault(t => t.Id == transactionId && t.UserName == userName);
             if (transactionToRemove != null)
             {
                 transactions.Remove(transactionToRemove);
@@ -103,21 +104,21 @@ namespace BudgetEase.Services
             }
         }
 
-        // Example of updating an existing transaction
-        public async Task UpdateTransactionAsync(string transactionId, Transactions updatedTransaction)
+        // Update a transaction for a specific user
+        public async Task UpdateTransactionForUserAsync(string transactionId, string userName, Transactions updatedTransaction)
         {
             var transactions = await LoadTransactionsAsync();
-            var existingTransaction = transactions.FirstOrDefault(t => t.Id == transactionId);
+            var existingTransaction = transactions
+                .FirstOrDefault(t => t.Id == transactionId && t.UserName == userName);
 
             if (existingTransaction != null)
             {
-                // Update existing transaction properties
                 existingTransaction.Amount = updatedTransaction.Amount;
                 existingTransaction.Category = updatedTransaction.Category;
                 existingTransaction.Description = updatedTransaction.Description;
                 existingTransaction.Date = updatedTransaction.Date;
                 existingTransaction.Notes = updatedTransaction.Notes;
-                existingTransaction.Tags = updatedTransaction.Tags ?? new List<string>(); // Ensure tags are set (or empty if null)
+                existingTransaction.Tags = updatedTransaction.Tags ?? new List<string>();
                 existingTransaction.IsDebt = updatedTransaction.IsDebt;
                 existingTransaction.DebtAmount = updatedTransaction.DebtAmount;
                 existingTransaction.DueDate = updatedTransaction.DueDate;
@@ -125,31 +126,39 @@ namespace BudgetEase.Services
                 existingTransaction.AmountPaidToClearDebt = updatedTransaction.AmountPaidToClearDebt;
                 existingTransaction.BalanceRequired = updatedTransaction.BalanceRequired;
 
-                // Save the updated list of transactions
                 await SaveTransactionsAsync(transactions);
             }
         }
 
-        // Example of filtering transactions by category (credit, debit, debt) and date range
-        public async Task<List<Transactions>> FilterTransactionsAsync(string category, DateTime startDate, DateTime endDate)
+        public async Task<List<Transactions>> FilterTransactionsForUserAsync(string userName, string? category = null, List<string>? tags = null, DateTime? startDate = null, DateTime? endDate = null)
         {
+            // Load all transactions asynchronously
             var transactions = await LoadTransactionsAsync();
 
-            var filteredTransactions = transactions.Where(t => t.Category.Equals(category, StringComparison.OrdinalIgnoreCase) &&
-                                                                t.Date >= startDate &&
-                                                                t.Date <= endDate).ToList();
+            // Filter the transactions based on the provided criteria and userName
+            var filteredTransactions = transactions
+                .Where(t => t.UserName == userName) // Ensure transactions belong to the user
+                                                    // Filter by category if provided
+                .Where(t => string.IsNullOrEmpty(category) || t.Category.Equals(category, StringComparison.OrdinalIgnoreCase))
+                // Filter by tags if provided
+                .Where(t => tags == null || !tags.Any() || tags.All(tag => t.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase)))
+                // Filter by start date if provided
+                .Where(t => !startDate.HasValue || t.Date >= startDate.Value)
+                // Filter by end date if provided
+                .Where(t => !endDate.HasValue || t.Date <= endDate.Value)
+                .ToList();
 
             return filteredTransactions;
         }
 
-        // Example of searching transactions by title (description)
-        public async Task<List<Transactions>> SearchTransactionsAsync(string searchQuery)
+        // Search transactions for a specific user by description
+        public async Task<List<Transactions>> SearchTransactionsForUserAsync(string userName, string searchQuery)
         {
             var transactions = await LoadTransactionsAsync();
-
-            var filteredTransactions = transactions.Where(t => t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
-
-            return filteredTransactions;
+            return transactions
+                .Where(t => t.UserName == userName && t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
+                .ToList();
         }
     }
 }
+

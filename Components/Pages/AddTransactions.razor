@@ -3,6 +3,8 @@
 @using BudgetEase.Services
 
 @inject TransactionService TransactionService
+@inject UserServices UserServices
+
 
 <div style="max-width: 600px; margin: 2rem auto; padding: 2rem; background: white; border-radius: 12px; box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);">
     <h3 style="color: #2c3e50; font-size: 24px; margin-bottom: 1.5rem; text-align: center; font-weight: 600;">Add Transaction</h3>
@@ -19,7 +21,7 @@
         <!-- Transaction Date -->
         <div style="margin-bottom: 1.5rem;">
             <label style="display: block; margin-bottom: 0.5rem; color: #4a5568; font-weight: 500;" for="date">Transaction Date</label>
-            <InputDate id="date" @bind-Value="transaction.Date" style="width: 100%; padding: 0.75rem; border: 1px solid #e2e8f0; border-radius: 6px; font-size: 1rem; transition: border-color 0.2s; outline: none;" />
+            <input type="date" id="date" @bind="transaction.Date" class="form-control" style="width: 100%; padding: 0.75rem; border-radius: 6px; font-size: 1rem;" />
         </div>
 
         <!-- Description -->
@@ -81,16 +83,25 @@
 }
 
 @code {
-    private Transactions transaction = new Transactions();
+    private Transactions transaction = new Transactions
+        {
+            Date = DateTime.Today // Correctly initialize Date here
+        };
+
     private string tagsInput = string.Empty;
     private string selectedTag = string.Empty;
     private string messageTitle = string.Empty;
     private string messageContent = string.Empty;
     private bool isMessageVisible = false;
 
+    // Add tags to the transaction
     private void AddTagsToTransaction()
     {
-        var newTags = tagsInput.Split(',').Select(tag => tag.Trim()).Where(tag => !string.IsNullOrEmpty(tag)).ToList();
+        var newTags = tagsInput.Split(',')
+            .Select(tag => tag.Trim())
+            .Where(tag => !string.IsNullOrEmpty(tag))
+            .ToList();
+
         if (!string.IsNullOrEmpty(selectedTag) && !transaction.Tags.Contains(selectedTag))
         {
             newTags.Add(selectedTag);
@@ -99,35 +110,58 @@
         transaction.Tags = newTags.Distinct().ToList();
     }
 
+    // Handle form submission
     private async Task HandleSubmit()
     {
         try
         {
+            // Get logged-in user's details
+            var loggedInUser =  UserServices.GetLoggedInUser();
+            if (loggedInUser == null)
+            {
+                throw new InvalidOperationException("User is not logged in.");
+            }
+
+            // Add the UserName to the transaction
+            transaction.UserName = loggedInUser.UserName;
+
+            // Ensure category is set
             if (transaction.Category == null)
             {
                 transaction.Category = transaction.Amount > 0 ? "credit" : "debit";
             }
 
+            // Set default values if any
             transaction.TransactionType = transaction.Category;
-            transaction.Id = Guid.NewGuid().ToString();
-            AddTagsToTransaction();
+            transaction.Id = Guid.NewGuid().ToString(); // Generate unique transaction ID
+            AddTagsToTransaction(); // Add tags
 
+            // Call service to add the transaction
             await TransactionService.AddTransactionAsync(transaction);
 
+            // Success message
             messageTitle = "Success!";
-            messageContent = $"Transaction Added: Amount: {transaction.Amount}, Date: {transaction.Date}, Description: {transaction.Description}, Category: {transaction.Category}";
+            messageContent = "Transaction added successfully.";
             isMessageVisible = true;
+
+            // Reset form
+            transaction = new Transactions();
+            tagsInput = string.Empty;
+            selectedTag = string.Empty;
         }
         catch (Exception ex)
         {
+            // Error message
             messageTitle = "Error!";
-            messageContent = $"An error occurred while adding the transaction: {ex.Message}";
+            messageContent = ex.Message;
             isMessageVisible = true;
         }
     }
 
+    // Close message box
     private void CloseMessageBox()
     {
         isMessageVisible = false;
     }
 }
+

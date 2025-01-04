@@ -13,8 +13,9 @@ namespace BudgetEase.Services
     public class UserServices
     {
         private const string FilePath = @"C:\Users\asimk\OneDrive\Desktop\AD\BudgetEase\Data\users.json";  // Absolute path for users.json
-
-        public List<User> LoadUsers()
+                                                                                                           //Added a static variable to hold the logged-in user Information
+        private static User? _loggedInUser;
+        public  List<User> LoadUsers()
         {
             if (!File.Exists(FilePath))
                 return new List<User>();  // Return an empty list if no users exist
@@ -23,7 +24,7 @@ namespace BudgetEase.Services
             return JsonSerializer.Deserialize<List<User>>(json) ?? new List<User>();
         }
 
-        public void SaveUsers(List<User> users)
+        public void  SaveUsers(List<User> users)
         {
             // Ensure the directory exists
             var directory = Path.GetDirectoryName(FilePath);
@@ -37,6 +38,7 @@ namespace BudgetEase.Services
             File.WriteAllText(FilePath, json);
         }
 
+   
         public string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
@@ -44,7 +46,15 @@ namespace BudgetEase.Services
             var hash = sha256.ComputeHash(bytes);
             return Convert.ToBase64String(hash);  // Return hashed password
         }
+        public void SetLoggedInUser(User user)
+        {
+            _loggedInUser = user;
+        }
 
+        public User? GetLoggedInUser()
+        {
+            return _loggedInUser;
+        }
         public bool ValidatePassword(string inputPassword, string storedPassword)
         {
             var hashedInputPassword = HashPassword(inputPassword);

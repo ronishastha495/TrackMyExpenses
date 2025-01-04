@@ -3,93 +3,176 @@
 @using BudgetEase.Services
 
 @inject TransactionService TransactionService
+@inject UserServices UserServices
 
-<h1> View Transactions</h1>
-
-
-<div style="padding: 20px; max-width: 1200px; margin: 0 auto;">
-    <h2 style="color: #333; font-size: 2rem; margin-bottom: 30px; border-bottom: 2px solid #eee; padding-bottom: 10px;">
-        View Transactions
-    </h2>
-
-    <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 30px;">
-        <!-- Cash Inflows -->
-        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #28a745; font-size: 1.5rem; margin-bottom: 20px;">
-                Cash Inflows
-            </h3>
-            <ul style="list-style: none; padding: 0; margin: 0;">
-                @foreach (var transaction in inflows)
-                {
-                    <li style="background-color: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #28a745;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <strong style="color: #28a745; font-size: 1.2rem;">
-                                +@transaction.Amount.ToString("C")
-                            </strong>
-                            <small style="color: #666;">
-                                @transaction.Date.ToShortDateString()
-                            </small>
-                        </div>
-                        <div style="color: #333; margin: 8px 0;">
-                            @transaction.Description
-                        </div>
-                        <div style="margin-top: 8px;">
-                            @foreach (var tag in transaction.Tags)
-                            {
-                                <span style="display: inline-block; background-color: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; margin-right: 5px;">
-                                    @tag
-                                </span>
-                            }
-                        </div>
-                    </li>
-                }
-            </ul>
+<div class="container-fluid py-4">
+    <div class="row mb-4">
+        <div class="col">
+            <h1 class="display-4 mb-4 pb-2 border-bottom">View Transactions</h1>
         </div>
+    </div>
+
+    <!-- Filtering Options -->
+    <div class="row mb-4">
+        <div class="col-12 col-md-6 mb-3">
+            <input type="text"
+                   @bind="searchTerm"
+                   placeholder="Search transactions..."
+                   class="form-control" />
+        </div>
+        <div class="col-12 col-md-6 mb-3">
+            <select @bind="selectedCategory" class="form-select">
+                <option value="">All Categories</option>
+                <option value="credit">Credit</option>
+                <option value="debit">Debit</option>
+            </select>
+        </div>
+        <!-- Date Range Filters -->
+        <div class="col-12 col-md-3 mb-3">
+            <input type="date"
+                   @bind="startDate"
+                   class="form-control"
+                   placeholder="Start Date" />
+        </div>
+        <div class="col-12 col-md-3 mb-3">
+            <input type="date"
+                   @bind="endDate"
+                   class="form-control"
+                   placeholder="End Date" />
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Cash Inflows -->
+        @if (string.IsNullOrEmpty(selectedCategory) || selectedCategory == "credit")
+        {
+                <div class="col-12 @(string.IsNullOrEmpty(selectedCategory) ? "col-lg-6" : "col-lg-8 mx-auto") mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-success bg-opacity-10">
+                            <h3 class="card-title text-success mb-0">Cash Inflows</h3>
+                        </div>
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                            @foreach (var transaction in filteredInflows)
+                            {
+                                        <li class="mb-3">
+                                            <div class="card border-start border-success border-4">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <span class="h5 text-success mb-0">
+                                                            +@transaction.Amount.ToString("C")
+                                                        </span>
+                                                        <small class="text-muted">
+                                                    @transaction.Date.ToShortDateString()
+                                                        </small>
+                                                    </div>
+                                                    <p class="mb-2 mt-2">@transaction.Description</p>
+                                                    <div>
+                                                @foreach (var tag in transaction.Tags)
+                                                {
+                                                                <span class="badge bg-light text-secondary me-1">
+                                                        @tag
+                                                                </span>
+                                                }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
+                            }
+                            </ul>
+                        </div>
+                    </div>
+                </div>
+        }
 
         <!-- Cash Outflows -->
-        <div style="background-color: #f8f9fa; border-radius: 10px; padding: 20px; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
-            <h3 style="color: #dc3545; font-size: 1.5rem; margin-bottom: 20px;">
-                Cash Outflows
-            </h3>
-            <ul style="list-style: none; padding: 0; margin: 0;">
-                @foreach (var transaction in outflows)
-                {
-                    <li style="background-color: white; padding: 15px; margin-bottom: 15px; border-radius: 8px; border-left: 4px solid #dc3545;">
-                        <div style="display: flex; justify-content: space-between; align-items: flex-start;">
-                            <strong style="color: #dc3545; font-size: 1.2rem;">
-                                -@transaction.Amount.ToString("C")
-                            </strong>
-                            <small style="color: #666;">
-                                @transaction.Date.ToShortDateString()
-                            </small>
+        @if (string.IsNullOrEmpty(selectedCategory) || selectedCategory == "debit")
+        {
+                <div class="col-12 @(string.IsNullOrEmpty(selectedCategory) ? "col-lg-6" : "col-lg-8 mx-auto") mb-4">
+                    <div class="card h-100">
+                        <div class="card-header bg-danger bg-opacity-10">
+                            <h3 class="card-title text-danger mb-0">Cash Outflows</h3>
                         </div>
-                        <div style="color: #333; margin: 8px 0;">
-                            @transaction.Description
-                        </div>
-                        <div style="margin-top: 8px;">
-                            @foreach (var tag in transaction.Tags)
+                        <div class="card-body">
+                            <ul class="list-unstyled">
+                            @foreach (var transaction in filteredOutflows)
                             {
-                                <span style="display: inline-block; background-color: #e9ecef; color: #495057; padding: 2px 8px; border-radius: 12px; font-size: 0.85rem; margin-right: 5px;">
-                                    @tag
-                                </span>
+                                        <li class="mb-3">
+                                            <div class="card border-start border-danger border-4">
+                                                <div class="card-body">
+                                                    <div class="d-flex justify-content-between align-items-start">
+                                                        <span class="h5 text-danger mb-0">
+                                                            -@transaction.Amount.ToString("C")
+                                                        </span>
+                                                        <small class="text-muted">
+                                                    @transaction.Date.ToShortDateString()
+                                                        </small>
+                                                    </div>
+                                                    <p class="mb-2 mt-2">@transaction.Description</p>
+                                                    <div>
+                                                @foreach (var tag in transaction.Tags)
+                                                {
+                                                                <span class="badge bg-light text-secondary me-1">
+                                                        @tag
+                                                                </span>
+                                                }
+                                                    </div>
+                                                </div>
+                                            </div>
+                                        </li>
                             }
+                            </ul>
                         </div>
-                    </li>
-                }
-            </ul>
-        </div>
+                    </div>
+                </div>
+        }
     </div>
 </div>
 
 @code {
     private List<Transactions> inflows = new List<Transactions>();
     private List<Transactions> outflows = new List<Transactions>();
+    private string searchTerm = string.Empty;
+    private string selectedCategory = string.Empty;
+    private DateTime? startDate = null;
+    private DateTime? endDate = null;
+
+    private IEnumerable<Transactions> filteredInflows => inflows
+        .Where(t => (string.IsNullOrEmpty(searchTerm) || t.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+                    (!startDate.HasValue || t.Date >= startDate.Value) &&
+                    (!endDate.HasValue || t.Date <= endDate.Value));
+
+    private IEnumerable<Transactions> filteredOutflows => outflows
+        .Where(t => (string.IsNullOrEmpty(searchTerm) || t.Description.Contains(searchTerm, StringComparison.OrdinalIgnoreCase)) &&
+                    (!startDate.HasValue || t.Date >= startDate.Value) &&
+                    (!endDate.HasValue || t.Date <= endDate.Value));
 
     protected override async Task OnInitializedAsync()
     {
-        var transactions = await TransactionService.LoadTransactionsAsync();
-        Console.WriteLine($"Loaded transactions: {transactions.Count}");
-        inflows = transactions.Where(t => t.Category == "credit").ToList();
-        outflows = transactions.Where(t => t.Category == "debit").ToList();
+        try
+        {
+            // Fetch logged-in user
+            var loggedInUser =  UserServices.GetLoggedInUser(); // Make sure it's an async call
+            if (loggedInUser == null)
+            {
+                throw new InvalidOperationException("User is not logged in.");
+            }
+
+            // Fetch transactions specific to the logged-in user
+            var transactions = await TransactionService.LoadTransactionsAsync();
+            Console.WriteLine($"Loaded transactions for {loggedInUser.UserName}: {transactions.Count}");
+
+            // Filter inflows and outflows for the logged-in user
+            inflows = transactions
+                .Where(t => t.UserName == loggedInUser.UserName && t.Category == "credit")
+                .ToList();
+            outflows = transactions
+                .Where(t => t.UserName == loggedInUser.UserName && t.Category == "debit")
+                .ToList();
+        }
+        catch (Exception ex)
+        {
+            Console.WriteLine($"Error loading transactions: {ex.Message}");
+        }
     }
 }

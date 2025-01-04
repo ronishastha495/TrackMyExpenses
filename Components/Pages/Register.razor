@@ -17,6 +17,18 @@
         <input id="email" @bind="RegisterEmail" placeholder="Email"
                style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
     </div>
+    <!-- Currency Field -->
+    <div style="margin-bottom: 20px;">
+        <label for="currency" style="display: block; font-size: 14px; font-weight: bold;">Preferred Currency</label>
+        <select id="currency" @bind="PreferredCurrency"
+                style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="GBP">GBP</option>
+            <option value="INR">INR</option>
+            <option value="AUD">AUD</option>
+        </select>
+    </div>
 
     <div style="margin-bottom: 20px;">
         <label for="password" style="display: block; font-size: 14px; font-weight: bold;">Password</label>
@@ -45,6 +57,7 @@
     private string RegisterUsername = "";
     private string RegisterPassword = "";
     private string RegisterEmail = "";
+    private string PreferredCurrency = "USD"; 
     private string Message = "";
 
     private List<User> Users = new();
@@ -65,7 +78,7 @@
         }
 
         // Check if the username already exists
-        if (Users.Any(u => u.Username == RegisterUsername))
+        if (Users.Any(u => u.UserName == RegisterUsername))
         {
             Message = "Username already exists.";
             return;
@@ -81,9 +94,10 @@
         // Create new user object
         var newUser = new User
             {
-                Username = RegisterUsername,
+                UserName = RegisterUsername,
                 Password = UserServices.HashPassword(RegisterPassword), // Hash the password
-                Email = RegisterEmail
+                Email = RegisterEmail,
+                PreferredCurrency = PreferredCurrency // Save the preferred currency
             };
 
         // Add new user to the list
@@ -100,3 +114,4 @@
         NavigationManager.NavigateTo("/");
     }
 }
+

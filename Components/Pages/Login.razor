@@ -1,8 +1,10 @@
 ﻿@page "/"
 @using BudgetEase.Model
 @using BudgetEase.Services
+
 @inject UserServices UserServices
 @inject NavigationManager NavigationManager
+
 
 <h3>Login</h3>
 
@@ -21,21 +23,8 @@
                style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
     </div>
 
-    <!-- Currency Field -->
-    <div style="margin-bottom: 20px;">
-        <label for="currency" style="display: block; font-size: 14px; font-weight: bold;">Preferred Currency</label>
-        <select id="currency" @bind="PreferredCurrency" 
-                style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="GBP">GBP</option>
-            <option value="INR">INR</option>
-            <option value="AUD">AUD</option>
-        </select>
-    </div>
-
     <!-- Login Button -->
-    <button @onclick="HandleLogin" 
+    <button @onclick="HandleLogin"
             style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
         Login
     </button>
@@ -43,7 +32,7 @@
     <!-- Error Message Display -->
     @if (!string.IsNullOrEmpty(Message))
     {
-            <p style="color: red; margin-top: 10px;">@Message</p>
+        <p style="color: red; margin-top: 10px;">@Message</p>
     }
 
     <!-- Register Link -->
@@ -57,7 +46,6 @@
 @code {
     private string LoginUsername = "";
     private string LoginPassword = "";
-    private string PreferredCurrency = "USD"; // Default currency
     private string Message = "";
 
     private List<User> Users = new();
@@ -68,7 +56,7 @@
         Users = UserServices.LoadUsers();
     }
 
-    private void HandleLogin()
+    private async void HandleLogin()
     {
         // Check if all fields are filled
         if (string.IsNullOrWhiteSpace(LoginUsername) || string.IsNullOrWhiteSpace(LoginPassword))
@@ -77,7 +65,7 @@
             return;
         }
 
-        var user = Users.FirstOrDefault(u => u.Username == LoginUsername);
+        var user = Users.FirstOrDefault(u => u.UserName == LoginUsername);
         if (user == null)
         {
             Message = "User not found.";
@@ -90,9 +78,16 @@
             return;
         }
 
+
+
+        UserServices.SetLoggedInUser(user);
+
         // Successful login
         Message = "Login successful. Redirecting to home...";
-        Task.Delay(2000).ContinueWith(_ => NavigationManager.NavigateTo("/dashboard"));
+
+        // Redirect after a delay
+        await Task.Delay(2000);
+        NavigationManager.NavigateTo("/dashboard");
     }
 
     private void NavigateToRegister()

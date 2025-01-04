@@ -8,9 +8,12 @@ namespace BudgetEase.Model
 {
     public class Debt
     {
-        public int Id { get; set; }
+         public string debtId { get; set; }
+        public string? UserName { get; set; }
         public string Source { get; set; }
         public decimal Amount { get; set; }
+        public decimal PaidAmount { get; set; } = 0;
+     
         public DateTime DueDate { get; set; }
         public string Notes { get; set; }
         public string Tags { get; set; }  // You could store this as a comma-separated string or create a separate table for tags.

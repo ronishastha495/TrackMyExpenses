@@ -1,99 +1,12 @@
 [
   {
-    "Id": "7bac9a05-0cf4-49d3-9310-6b3394396145",
-    "Amount": 1200,
-    "Category": "debt_repayment",
-    "Description": "hohoho",
-    "Date": "0001-01-08T00:00:00",
-    "Notes": null,
-    "Tags": null,
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": null
-  },
-  {
-    "Id": "5ff6219d-7a2a-464f-9955-8ac3f8816a3e",
+    "Id": "0e5f6925-f1de-4d58-bf53-703ce00c11df",
+    "UserName": null,
     "Amount": 1500,
-    "Category": null,
-    "Description": "luga",
-    "Date": "0001-01-06T00:00:00",
-    "Notes": null,
-    "Tags": [
-      "loveit"
-    ],
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": null
-  },
-  {
-    "Id": "7c4e014c-2c69-4122-b802-4c8efa244425",
-    "Amount": 1400,
     "Category": "credit",
-    "Description": "deq",
-    "Date": "0001-01-13T00:00:00",
-    "Notes": null,
-    "Tags": [
-      "sqws"
-    ],
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": null
-  },
-  {
-    "Id": "945e255c-fdc0-4917-a8e6-c65c9875bf98",
-    "Amount": 1200,
-    "Category": "credit",
-    "Description": "rin",
-    "Date": "0001-01-12T00:00:00",
-    "Notes": "rin",
-    "Tags": [
-      "rin"
-    ],
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": "Outflow"
-  },
-  {
-    "Id": "622fe970-bec7-4129-ac19-af9d4bd6c5a0",
-    "Amount": 1200,
-    "Category": "debit",
-    "Description": "rin",
-    "Date": "0001-01-12T00:00:00",
-    "Notes": "rin",
-    "Tags": [
-      "rin"
-    ],
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": "Outflow"
-  },
-  {
-    "Id": "34254b67-c40a-43b4-84af-dd3cde488fb9",
-    "Amount": 1800,
-    "Category": "credit",
-    "Description": "salary",
-    "Date": "0001-01-01T00:00:00",
-    "Notes": "salary no bonus",
+    "Description": "business",
+    "Date": "2025-01-10T00:00:00",
+    "Notes": "profit",
     "Tags": [
       "monthly"
     ],
@@ -106,46 +19,15 @@
     "TransactionType": "credit"
   },
   {
-    "Id": "9e65dcc6-8383-44a0-a721-1310046b614c",
-    "Amount": 2000,
+    "Id": "c67c0db5-50fd-456f-883f-39e037306467",
+    "UserName": null,
+    "Amount": 10009,
     "Category": "credit",
-    "Description": "knxle",
-    "Date": "0001-01-01T00:00:00",
-    "Notes": "wqjq",
-    "Tags": [],
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": "Outflow"
-  },
-  {
-    "Id": "cf97eeb0-a491-4dc8-83e9-479d2aebcbaa",
-    "Amount": 100,
-    "Category": "credit",
-    "Description": "cc",
-    "Date": "0001-01-01T00:00:00",
-    "Notes": "cc",
-    "Tags": [],
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": "Outflow"
-  },
-  {
-    "Id": "5fd6388e-8e4b-4f4f-8cca-8d6661d86a79",
-    "Amount": 2000,
-    "Category": "credit",
-    "Description": "ws",
-    "Date": "0001-01-01T00:00:00",
-    "Notes": "we",
+    "Description": "SALARY",
+    "Date": "2025-01-07T00:00:00",
+    "Notes": "WIHTOUT BONUS",
     "Tags": [
-      "zs"
+      "monthly"
     ],
     "IsDebt": false,
     "DebtAmount": null,
@@ -153,51 +35,16 @@
     "IsPendingDebt": false,
     "AmountPaidToClearDebt": null,
     "BalanceRequired": null,
-    "TransactionType": "Outflow"
+    "TransactionType": "credit"
   },
   {
-    "Id": "7430872c-7d76-4ffa-8951-5446988b2023",
-    "Amount": 2000,
-    "Category": "debit",
-    "Description": "ws",
-    "Date": "0001-01-01T00:00:00",
-    "Notes": "we",
-    "Tags": [
-      "zs"
-    ],
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": "Outflow"
-  },
-  {
-    "Id": "52833a45-ffd5-409e-b9fc-9897d83e9a47",
-    "Amount": 1500,
-    "Category": "debit",
-    "Description": "op",
-    "Date": "0001-01-01T00:00:00",
-    "Notes": "op",
-    "Tags": [
-      "op"
-    ],
-    "IsDebt": false,
-    "DebtAmount": null,
-    "DueDate": null,
-    "IsPendingDebt": false,
-    "AmountPaidToClearDebt": null,
-    "BalanceRequired": null,
-    "TransactionType": "Outflow"
-  },
-  {
-    "Id": "d81169c9-ac69-4050-97ff-4b6b809ae626",
+    "Id": "be499b81-a5e8-438e-beea-d33ba3f0b5df",
+    "UserName": "OP",
     "Amount": 12,
     "Category": "credit",
-    "Description": "po",
-    "Date": "0001-01-01T00:00:00",
-    "Notes": "po",
+    "Description": "de",
+    "Date": "2025-01-04T00:00:00+05:45",
+    "Notes": null,
     "Tags": [],
     "IsDebt": false,
     "DebtAmount": null,
@@ -206,5 +53,56 @@
     "AmountPaidToClearDebt": null,
     "BalanceRequired": null,
     "TransactionType": "credit"
+  },
+  {
+    "Id": "6fa404c1-46c2-4475-b049-c1c675c79b96",
+    "UserName": "OP",
+    "Amount": 1200,
+    "Category": "credit",
+    "Description": "ew",
+    "Date": "2025-01-04T00:00:00+05:45",
+    "Notes": null,
+    "Tags": [],
+    "IsDebt": false,
+    "DebtAmount": null,
+    "DueDate": null,
+    "IsPendingDebt": false,
+    "AmountPaidToClearDebt": null,
+    "BalanceRequired": null,
+    "TransactionType": "credit"
+  },
+  {
+    "Id": "45d1d610-5917-4bc4-87ca-4d08f9348dcc",
+    "UserName": "OP",
+    "Amount": 212,
+    "Category": "debit",
+    "Description": "oi",
+    "Date": "2025-01-04T00:00:00+05:45",
+    "Notes": null,
+    "Tags": [],
+    "IsDebt": false,
+    "DebtAmount": null,
+    "DueDate": null,
+    "IsPendingDebt": false,
+    "AmountPaidToClearDebt": null,
+    "BalanceRequired": null,
+    "TransactionType": "Outflow"
+  },
+  {
+    "Id": null,
+    "UserName": "OP",
+    "Amount": 500,
+    "Category": "credit",
+    "Description": null,
+    "Date": "0001-01-01T00:00:00",
+    "Notes": "Payment for debt car loan",
+    "Tags": [],
+    "IsDebt": false,
+    "DebtAmount": null,
+    "DueDate": null,
+    "IsPendingDebt": false,
+    "AmountPaidToClearDebt": null,
+    "BalanceRequired": null,
+    "TransactionType": "debt"
   }
 ]
