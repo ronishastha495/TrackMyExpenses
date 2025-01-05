@@ -1,0 +1,39 @@
+﻿body {
+    .popup
+
+{
+    background-color: #4caf50; /* Green background */
+    color: white; /* White text */
+    padding: 10px; /* Padding inside the box */
+    position: fixed; /* Fixed position */
+    top: 20px; /* Distance from the top */
+    right: 20px; /* Distance from the right */
+    border-radius: 5px; /* Rounded corners */
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+    z-index: 1000; /* Ensure it appears above other elements */
+    animation: fade-in-out 2s; /* Smooth fade-in and fade-out animation */
+}
+
+@keyframes fade-in-out {
+    0% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+
+    20% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    80% {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    100% {
+        opacity: 0;
+        transform: translateY(-10px);
+    }
+}
+
+}

@@ -1,6 +1,8 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
         <a class="navbar-brand" href="">TrackMyExpenses</a>
+        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
+
     </div>
 </div>
 
@@ -8,20 +10,50 @@
 
 <div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
     <nav class="flex-column">
+        <!-- Dashboard -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="" Match="NavLinkMatch.All">
-                <span class="bi bi-house-door-fill-nav-menu" aria-hidden="true"></span> Home
-            </NavLink>
+            <a class="nav-link" href="/dashboard">
+                <i class="fas fa-tachometer-alt"></i>   Dashboard
+            </a>
         </div>
+       
+        <!-- Cash In -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="counter">
-                <span class="bi bi-plus-square-fill-nav-menu" aria-hidden="true"></span> Counter
-            </NavLink>
+                <a class="nav-link" href="/cash-inflow">
+                <i class="fas fa-arrow-circle-down">   </i>   Cash In
+            </a>
         </div>
+
+                <!-- Cash Out -->
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="weather">
-                <span class="bi bi-list-nested-nav-menu" aria-hidden="true"></span> Weather
-            </NavLink>
+            <a class="nav-link" href="/add-cash-out">
+                <i class="fas fa-arrow-circle-down">   </i>   Cash Out
+            </a>
+        </div>
+
+        <!-- Debt -->
+        <div class="nav-item px-3">
+            <a class="nav-link" href="/add-debt">
+                <i class="fas fa-arrow-circle-down">   </i>   Debt
+            </a>
+        </div>
+        <!-- Transaction -->
+        <div class="nav-item px-3">
+            <a class="nav-link" href="/view-transactions"
+                <i class="fas fa-wallet">   </i>   My Transaction
+            </a>
+        </div>
+         <!-- Clear debt -->
+        <div class="nav-item px-3">
+            <a class="nav-link" href="/debt-payment"
+                <i class="fas fa-wallet">   </i>  Clear Debt
+            </a>
+        </div>
+
+        <div class="nav-item px-3">
+            <a class="nav-link" href="/">
+                <i class="fas fa-wallet">   </i>   Logout
+            </a>
         </div>
     </nav>
 </div>

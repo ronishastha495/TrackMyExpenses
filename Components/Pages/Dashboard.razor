@@ -1,0 +1,178 @@
+﻿@page "/dashboard"
+@inject NavigationManager Navigation
+@using TrackMyExpenses.Model
+@using TrackMyExpenses.Services
+@inject TransactionService TransactionService
+@inject UserServices UserServices
+@inject DebtService DebtService
+
+<h3 class="text-center my-4 text-3xl font-semibold">Dashboard</h3>
+
+<div class="dashboard-container flex">
+    <NavMenu />
+    <div class="main-content flex-grow-1 p-4">
+        <h2 class="mb-4 text-2xl font-semibold">Dashboard Overview</h2>
+        
+        <!-- Summary Cards -->
+        <div class="summary-cards grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
+            <!-- Inflows Card -->
+            <div class="card shadow-lg rounded-lg p-4 bg-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-green-500">Total Inflows</h5>
+                    <p class="display-6 text-3xl font-bold text-green-500">@TotalInflows.ToString("C")</p>
+                </div>
+            </div>
+            <!-- Outflows Card -->
+            <div class="card shadow-lg rounded-lg p-4 bg-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-red-500">Total Outflows</h5>
+                    <p class="display-6 text-3xl font-bold text-red-500">@TotalOutflows.ToString("C")</p>
+                </div>
+            </div>
+            <!-- Debts Card -->
+            <div class="card shadow-lg rounded-lg p-4 bg-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-yellow-500">Total Debts</h5>
+                    <p class="display-6 text-3xl font-bold text-yellow-500">@TotalDebts.ToString("C")</p>
+                </div>
+            </div>
+            <!-- Available Balance Card -->
+            <div class="card shadow-lg rounded-lg p-4 bg-white">
+                <div class="card-body text-center">
+                    <h5 class="card-title text-blue-500">Available Balance</h5>
+                    <p class="display-6 text-3xl font-bold text-blue-500">@AvailableBalance.ToString("C")</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Recent Transactions Table -->
+        <div class="recent-transactions mt-8">
+            <h3 class="text-xl font-semibold mb-4">Top 5 Recent Transactions</h3>
+            <table class="min-w-full table-auto border-collapse">
+                <thead>
+                    <tr>
+                        <th class="px-4 py-2 text-left border-b">Date</th>
+                        <th class="px-4 py-2 text-left border-b">Amount</th>
+                        <th class="px-4 py-2 text-left border-b">Category</th>
+                        <th class="px-4 py-2 text-left border-b">Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    @foreach (var transaction in recentTransactions)
+                    {
+                        <tr class="hover:bg-gray-100">
+                            <td class="px-4 py-2 border-b">@transaction.Date.ToString("MM/dd/yyyy")</td>
+                            <td class="px-4 py-2 border-b">
+                                <span class="font-bold text-@((transaction.Category == "Debit") ? "red-500" : "green-500")">
+                                    @transaction.Amount.ToString("C")
+                                </span>
+                            </td>
+                            <td class="px-4 py-2 border-b">@transaction.Category</td>
+                            <td class="px-4 py-2 border-b">@transaction.Description</td>
+                        </tr>
+                    }
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+
+<style>
+    .dashboard-container {
+        display: flex;
+        min-height: 100vh;
+        background-color: #f8f9fa;
+    }
+
+    .main-content {
+        flex-grow: 1;
+        padding: 1.5rem;
+        background-color: #fff;
+        border-radius: 8px;
+    }
+
+    .summary-cards .card {
+        background-color: #fff;
+        border: 1px solid #ddd;
+        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    }
+
+    .display-6 {
+        font-size: 2.5rem;
+    }
+
+    .text-center {
+        text-align: center;
+    }
+
+    /* Adjust card sizes and make them responsive */
+    .card {
+        transition: transform 0.3s ease-in-out;
+    }
+
+    .card:hover {
+        transform: translateY(-5px);
+    }
+
+    /* Gradient Button */
+    .gradient-button {
+        background: linear-gradient(to right, #4f46e5, #6d28d9);
+        color: white;
+        padding: 10px 20px;
+        border: none;
+        border-radius: 999px;
+        cursor: pointer;
+        transition: background 0.3s;
+    }
+
+    .gradient-button:hover {
+        background: linear-gradient(to right, #6d28d9, #4f46e5);
+    }
+</style>
+
+@code {
+    private decimal TotalInflows { get; set; } = 0;
+    private decimal TotalOutflows { get; set; } = 0;
+    private decimal TotalDebts { get; set; } = 0;
+    private decimal AvailableBalance { get; set; } = 0;
+    private List<Transactions> recentTransactions = new List<Transactions>(); // List to hold recent transactions
+    private Transactions transaction = new Transactions(); // Assuming you have a Transactions model
+
+    protected override async Task OnInitializedAsync()
+    {
+        try
+        {
+            // Fetch logged-in user
+            var loggedInUser = UserServices.GetLoggedInUser(); // Ensure this is an async call
+
+            if (loggedInUser == null)
+            {
+                throw new InvalidOperationException("User is not logged in.");
+            }
+
+            // Add the UserName to the transaction
+            transaction.UserName = loggedInUser.UserName;
+
+            // Fetch the data by passing the logged-in user's username
+            await RefreshData(loggedInUser.UserName);
+        }
+        catch (Exception ex)
+        {
+            // Handle user not logged in or any other exception
+            Console.WriteLine($"Error: {ex.Message}");
+        }
+    }
+
+    private async Task RefreshData(string userName)
+    {
+        // Fetch transaction-related data by passing the userName
+        TotalInflows = await TransactionService.GetTotalInflowsForUserAsync(userName);
+        TotalOutflows = await TransactionService.GetTotalOutflowsForUserAsync(userName);
+        TotalDebts = await DebtService.GetTotalDebtsAsync(userName); // Fetch total debts
+        AvailableBalance = await TransactionService.GetAvailableBalanceForUserAsync(userName); // Fetch available balance
+    }
+
+    
+
+
+}

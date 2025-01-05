@@ -1,0 +1,117 @@
+﻿@page "/register"
+@using TrackMyExpenses.Model
+@using TrackMyExpenses.Models
+@inject TrackMyExpenses.Services.UserServices UserServices
+@inject NavigationManager NavigationManager
+
+<h3>Create an Account</h3>
+
+<div style="max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
+    <div style="margin-bottom: 10px;">
+        <label for="username" style="display: block; font-size: 14px; font-weight: bold;">Username</label>
+        <input id="username" @bind="RegisterUsername" placeholder="Username"
+               style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+
+    <div style="margin-bottom: 10px;">
+        <label for="email" style="display: block; font-size: 14px; font-weight: bold;">Email</label>
+        <input id="email" @bind="RegisterEmail" placeholder="Email"
+               style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+    <!-- Currency Field -->
+    <div style="margin-bottom: 20px;">
+        <label for="currency" style="display: block; font-size: 14px; font-weight: bold;">Currency</label>
+        <select id="currency" @bind="PreferredCurrency"
+                style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
+            <option value="USD">USD</option>
+            <option value="EUR">EUR</option>
+            <option value="NPR">NPR</option>
+            <option value="INR">INR</option>
+        </select>
+    </div>
+
+    <div style="margin-bottom: 20px;">
+        <label for="password" style="display: block; font-size: 14px; font-weight: bold;">Password</label>
+        <input id="password" @bind="RegisterPassword" type="password" placeholder="Password"
+               style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
+    </div>
+
+    <button @onclick="HandleRegistration"
+            style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
+        Register
+    </button>
+
+    @if (!string.IsNullOrEmpty(Message))
+    {
+            <p style="color: red; margin-top: 10px;">@Message</p>
+    }
+
+    <div style="margin-top: 20px; text-align: center;">
+        <p style="font-size: 14px; color: #555;">
+            Already have an account? <NavLink href="/" style="color: #007bff; text-decoration: none;">Login here</NavLink> .
+        </p>
+    </div>
+</div>
+
+@code {
+    private string RegisterUsername = "";
+    private string RegisterPassword = "";
+    private string RegisterEmail = "";
+    private string PreferredCurrency = "USD";
+    private string Message = "";
+
+    private List<User> Users = new();
+
+    protected override void OnInitialized()
+    {
+        // Load existing users from UserService
+        Users = UserServices.LoadUsers();
+    }
+
+    private async Task HandleRegistration()
+    {
+        // Check if all fields are filled
+        if (string.IsNullOrWhiteSpace(RegisterUsername) || string.IsNullOrWhiteSpace(RegisterPassword) || string.IsNullOrWhiteSpace(RegisterEmail))
+        {
+            Message = "All fields are required.";
+            return;
+        }
+
+        // Check if the username already exists
+        if (Users.Any(u => u.UserName == RegisterUsername))
+        {
+            Message = "Username already exists.";
+            return;
+        }
+
+        // Check if the email is already in use (Optional)
+        if (Users.Any(u => u.Email == RegisterEmail))
+        {
+            Message = "Email already in use.";
+            return;
+        }
+
+        // Create new user object
+        var newUser = new User
+            {
+                UserName = RegisterUsername,
+                Password = UserServices.HashPassword(RegisterPassword), // Hash the password
+                Email = RegisterEmail,
+                PreferredCurrency = PreferredCurrency // Save the preferred currency
+            };
+
+        // Add new user to the list
+        Users.Add(newUser);
+
+        // Save the updated user list
+        UserServices.SaveUsers(Users);
+
+        // Set success message and redirect after delay
+        Message = "Registration successful. Redirecting to login...";
+        await Task.Delay(2000); // Wait for 2 seconds
+
+        // Redirect to login page
+        NavigationManager.NavigateTo("/");
+    }
+}
+
