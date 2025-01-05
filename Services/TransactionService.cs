@@ -73,9 +73,50 @@ namespace BudgetEase.Services
                 .Where(t => t.UserName == userName && t.Category == "debit")
                 .Sum(t => Math.Abs(t.Amount));
         }
+        // Get the highest inflow transaction for a specific user
+        public async Task<Transactions?> GetHighestInflowForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "credit")
+                .OrderByDescending(t => t.Amount)  // Sort by descending order to get the highest
+                .FirstOrDefault();
+        }
+
+        // Get the lowest inflow transaction for a specific user
+        public async Task<Transactions?> GetLowestInflowForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "credit")
+                .OrderBy(t => t.Amount)  // Sort by ascending order to get the lowest
+                .FirstOrDefault();
+        }
+
+        // Get the highest outflow transaction for a specific user
+        public async Task<Transactions?> GetHighestOutflowForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "debit")
+                .OrderByDescending(t => t.Amount)  // Sort by descending order to get the highest
+                .FirstOrDefault();
+        }
+
+        // Get the lowest outflow transaction for a specific user
+        public async Task<Transactions?> GetLowestOutflowForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "debit")
+                .OrderBy(t => t.Amount)  // Sort by ascending order to get the lowest
+                .FirstOrDefault();
+        }
+
+       
 
         // Get available balance for a specific user
-        public  async Task<decimal> GetAvailableBalanceForUserAsync(string userName)
+        public async Task<decimal> GetAvailableBalanceForUserAsync(string userName)
         {
             var transactions = await LoadTransactionsAsync();
 
@@ -130,7 +171,15 @@ namespace BudgetEase.Services
             }
         }
 
-        public async Task<List<Transactions>> FilterTransactionsForUserAsync(string userName, string? category = null, List<string>? tags = null, DateTime? startDate = null, DateTime? endDate = null)
+        public async Task<List<Transactions>> FilterTransactionsForUserAsync(
+     string userName,
+     string? category = null,
+     List<string>? tags = null,
+     DateTime? startDate = null,
+     DateTime? endDate = null,
+     string? searchTitle = null,  // Search by title (optional)
+     bool sortByDateDescending = false // Sort transactions by date (default: ascending)
+ )
         {
             // Load all transactions asynchronously
             var transactions = await LoadTransactionsAsync();
@@ -146,10 +195,19 @@ namespace BudgetEase.Services
                 .Where(t => !startDate.HasValue || t.Date >= startDate.Value)
                 // Filter by end date if provided
                 .Where(t => !endDate.HasValue || t.Date <= endDate.Value)
+                // Search by title if provided
+                .Where(t => string.IsNullOrEmpty(searchTitle) || t.Title.Contains(searchTitle, StringComparison.OrdinalIgnoreCase))
                 .ToList();
+
+            // Sort transactions by date if specified
+            filteredTransactions = sortByDateDescending
+                ? filteredTransactions.OrderByDescending(t => t.Date).ToList()
+                : filteredTransactions.OrderBy(t => t.Date).ToList();
 
             return filteredTransactions;
         }
+
+
 
         // Search transactions for a specific user by description
         public async Task<List<Transactions>> SearchTransactionsForUserAsync(string userName, string searchQuery)

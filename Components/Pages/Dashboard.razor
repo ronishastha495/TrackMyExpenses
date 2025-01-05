@@ -6,52 +6,228 @@
 @inject UserServices UserServices
 @inject DebtService DebtService
 
-<h3 class="text-center my-4">Dashboard</h3>
+@{
+    var loggedInUser = UserServices.GetLoggedInUser();
+}
 
-<div class="dashboard-container d-flex">
-    <NavMenu />
-    <div class="main-content flex-grow-1 p-4">
-        <h2 class="mb-4">Dashboard Overview</h2>
-        <div class="summary-cards row g-4">
-            <!-- Inflows Card -->
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-success">Total Inflows</h5>
-                        <p class="display-6 fw-bold text-success">@TotalInflows.ToString("C")</p>
+<div class="container py-5">
+
+
+    <!-- Welcome Message -->
+    <h1 class="text-center text-primary">
+        Welcome, @loggedInUser.UserName
+    </h1>
+</div>
+
+@if (isLoading)
+{
+    <div class="loading-container">
+        <div class="spinner-border text-primary" role="status">
+            <span class="visually-hidden">Loading...</span>
+        </div>
+        <p class="mt-2">Loading your financial data...</p>
+    </div>
+}
+else if (error != null)
+{
+    <div class="alert alert-danger" role="alert">
+        <h4 class="alert-heading">Oops! Something went wrong</h4>
+        <p>@error</p>
+        <button class="btn btn-outline-danger" @onclick="RetryLoad">Retry</button>
+    </div>
+}
+else
+{
+    <div class="dashboard-container d-flex">
+        <NavMenu />
+        <div class="main-content flex-grow-1 p-4">
+            <h2 class="mb-4">Dashboard Overview</h2>
+            <div class="summary-cards row g-4">
+                <!-- Inflows Card -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-light h-100">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title text-success">Total Inflows</h5>
+                            @if (TotalInflows == 0)
+                            {
+                                <p class="text-muted">No inflows recorded yet</p>
+                            }
+                            else
+                            {
+                                <p class="display-6 fw-bold text-success">@TotalInflows.ToString("C")</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <!-- Outflows Card -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-light h-100">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title text-danger">Total Outflows</h5>
+                            @if (TotalOutflows == 0)
+                            {
+                                <p class="text-muted">No outflows recorded yet</p>
+                            }
+                            else
+                            {
+                                <p class="display-6 fw-bold text-danger">@TotalOutflows.ToString("C")</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+                <!-- Debts Card -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-light h-100">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title text-primary">Total Debts</h5>
+                            @if (TotalDebts == 0)
+                            {
+                                <p class="text-muted">No debts recorded</p>
+                            }
+                            else
+                            {
+                                <p class="display-6 fw-bold text-primary">@TotalDebts.ToString("C")</p>
+                            }
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Available Balance Card -->
+                <div class="col-md-4">
+                    <div class="card shadow-sm border-light h-100">
+                        <div class="card-body text-center d-flex flex-column justify-content-center">
+                            <h5 class="card-title text-info">Available Balance</h5>
+                            <p class="display-6 fw-bold text-info">@AvailableBalance.ToString("C")</p>
+                        </div>
                     </div>
                 </div>
             </div>
-            <!-- Outflows Card -->
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-danger">Total Outflows</h5>
-                        <p class="display-6 fw-bold text-danger">@TotalOutflows.ToString("C")</p>
-                    </div>
+
+
+            <h2 class="my-4">Transaction Insights</h2>
+            @if (!HasAnyTransactions)
+            {
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-wallet2 fs-1 text-muted"></i>
+                    <h4 class="mt-3">No Transactions Yet</h4>
+                    <p class="text-muted">Start adding your transactions to see insights here.</p>
+                    <button class="btn btn-primary mt-2" @onclick="@(() => Navigation.NavigateTo("/add-transaction"))">
+                        Add Your First Transaction
+                    </button>
                 </div>
-            </div>
-            <!-- Debts Card -->
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-primary">Total Debts</h5>
-                        <p class="display-6 fw-bold text-primary">@TotalDebts.ToString("C")</p>
+            }
+            else
+            {
+                <div class="summary-cards row g-4">
+                    <!-- Highest Inflow Card -->
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-light h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-success">Highest Inflow</h5>
+                                @if (HighestInflow == null)
+                                {
+                                    <p class="text-muted">No inflows recorded</p>
+                                }
+                                else
+                                {
+                                    <p class="display-6 fw-bold text-success">@HighestInflow.Amount.ToString("C")</p>
+                                    <small class="text-muted">@HighestInflow.Date.ToShortDateString()</small>
+                                }
+                            </div>
+                        </div>
                     </div>
-                </div>
-            </div>
-            <!-- Available Balance Card -->
-            <div class="col-md-4">
-                <div class="card shadow-sm border-light">
-                    <div class="card-body text-center">
-                        <h5 class="card-title text-info">Available Balance</h5>
-                        <p class="display-6 fw-bold text-info">@AvailableBalance.ToString("C")</p>
+                    <!-- Lowest Inflow Card -->
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-light h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-warning">Lowest Inflow</h5>
+                                @if (LowestInflow == null)
+                                {
+                                    <p class="text-muted">No inflows recorded</p>
+                                }
+                                else
+                                {
+                                    <p class="display-6 fw-bold text-warning">@LowestInflow.Amount.ToString("C")</p>
+                                    <small class="text-muted">@LowestInflow.Date.ToShortDateString()</small>
+                                }
+                            </div>
+                        </div>
                     </div>
+
+                    <!-- Highest Outflow Card -->
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-light h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-danger">Highest Outflow</h5>
+                                @if (HighestOutflow == null)
+                                {
+                                    <p class="text-muted">No outflows recorded</p>
+                                }
+                                else
+                                {
+                                    <p class="display-6 fw-bold text-danger">@HighestOutflow.Amount.ToString("C")</p>
+                                    <small class="text-muted">@HighestOutflow.Date.ToShortDateString()</small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Lowest Outflow Card -->
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-light h-100">
+                            <div class="card-body text-center">
+                                <h5 class="card-title text-danger">Lowest Outflow</h5>
+                                @if (LowestOutflow == null)
+                                {
+                                    <p class="text-muted">No outflows recorded</p>
+                                }
+                                else
+                                {
+                                    <p class="display-6 fw-bold text-danger">@LowestOutflow.Amount.ToString("C")</p>
+                                    <small class="text-muted">@LowestOutflow.Date.ToShortDateString()</small>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Cleared Debt Card -->
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-light h-100">
+                            <div class="card-body text-center d-flex flex-column justify-content-center">
+                                <h5 class="card-title text-success">Cleared Debt</h5>
+                                @if (ClearedDebt == 0)
+                                {
+                                    <p class="text-muted">No cleared debts</p>
+                                }
+                                else
+                                {
+                                    <p class="display-6 fw-bold text-success">@ClearedDebt.ToString("C")</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+                    <!-- Remaining Debt Card -->
+                    <div class="col-md-4">
+                        <div class="card shadow-sm border-light h-100">
+                            <div class="card-body text-center d-flex flex-column justify-content-center">
+                                <h5 class="card-title text-danger">Remaining Debt</h5>
+                                @if (RemainingDebt == 0)
+                                {
+                                    <p class="text-muted">No remaining debts</p>
+                                }
+                                else
+                                {
+                                    <p class="display-6 fw-bold text-danger">@RemainingDebt.ToString("C")</p>
+                                }
+                            </div>
+                        </div>
+                    </div>
+
+                 
                 </div>
-            </div>
+            }
         </div>
     </div>
-</div>
+}
 
 <style>
     .dashboard-container {
@@ -65,39 +241,62 @@
         padding: 1.5rem;
         background-color: #fff;
         border-radius: 8px;
+        box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
     }
 
     .summary-cards .card {
         background-color: #fff;
         border: 1px solid #ddd;
         box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        height: 100%;
     }
 
     .card-title {
         font-size: 1.2rem;
+        margin-bottom: 1rem;
     }
 
     .display-6 {
         font-size: 2.5rem;
+        margin-bottom: 0;
     }
 
-    .text-center {
-        text-align: center;
-    }
-
-    /* Adding some spacing around the dashboard */
-    .my-4 {
-        margin-top: 2rem;
-        margin-bottom: 2rem;
-    }
-
-    /* Adjust card sizes and make them responsive */
     .card {
-        transition: transform 0.3s ease-in-out;
+        transition: all 0.3s ease-in-out;
     }
 
     .card:hover {
         transform: translateY(-5px);
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
+    }
+
+    .loading-container {
+        display: flex;
+        flex-direction: column;
+        align-items: center;
+        justify-content: center;
+        min-height: 50vh;
+    }
+
+    .empty-state {
+        background-color: #f8f9fa;
+        border-radius: 8px;
+        padding: 2rem;
+    }
+
+    .empty-state i {
+        font-size: 3rem;
+        color: #6c757d;
+    }
+
+    /* Shimmer effect for loading state */
+    .loading-shimmer {
+        background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+        background-size: 200% 100%;
+        animation: shimmer 1.5s infinite;
+    }
+
+  
     }
 </style>
 
@@ -106,42 +305,78 @@
     private decimal TotalOutflows { get; set; } = 0;
     private decimal TotalDebts { get; set; } = 0;
     private decimal AvailableBalance { get; set; } = 0;
-    private Transactions transaction = new Transactions(); // Assuming you have a Transactions model
+
+    private decimal ClearedDebt { get; set; }
+    private decimal RemainingDebt { get; set; }
+
+    private Transactions? HighestInflow { get; set; }
+    private Transactions? LowestInflow { get; set; }
+    private Transactions? HighestOutflow { get; set; }
+    private Transactions? LowestOutflow { get; set; }
+    private Transactions? HighestDebt { get; set; }
+    private Transactions? LowestDebt { get; set; }
+
+    private bool isLoading = true;
+    private string? error;
+    private Transactions transaction = new Transactions();
+
+    private bool HasAnyTransactions => 
+        HighestInflow != null || HighestOutflow != null || 
+        LowestInflow != null || LowestOutflow != null;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
         try
         {
-            // Fetch logged-in user
-            var loggedInUser =  UserServices.GetLoggedInUser(); // Ensure this is an async call
+            isLoading = true;
+            error = null;
+
+            var loggedInUser = UserServices.GetLoggedInUser();
 
             if (loggedInUser == null)
             {
-                throw new InvalidOperationException("User is not logged in.");
+                Navigation.NavigateTo("/login");
+                return;
             }
 
-            // Add the UserName to the transaction
             transaction.UserName = loggedInUser.UserName;
-
-            // Fetch the data by passing the logged-in user's username
             await RefreshData(loggedInUser.UserName);
         }
         catch (Exception ex)
         {
-            // Handle user not logged in or any other exception
+            error = "Unable to load your financial data. Please try again later.";
             Console.WriteLine($"Error: {ex.Message}");
         }
+        finally
+        {
+            isLoading = false;
+        }
+    }
+
+    private async Task RetryLoad()
+    {
+        await LoadData();
     }
 
     private async Task RefreshData(string userName)
     {
-        // Fetch transaction-related data by passing the userName
+        var debtSummary = await DebtService.GetDebtSummaryAsync(userName);
+        ClearedDebt = debtSummary.clearedDebt;
+        RemainingDebt = debtSummary.remainingDebt;
+
         TotalInflows = await TransactionService.GetTotalInflowsForUserAsync(userName);
         TotalOutflows = await TransactionService.GetTotalOutflowsForUserAsync(userName);
-        TotalDebts = await DebtService.GetTotalDebtsAsync(userName); // Fetch total debts
-        AvailableBalance = await TransactionService.GetAvailableBalanceForUserAsync(userName); // Fetch available balance
+        TotalDebts = await DebtService.GetTotalDebtsAsync(userName);
+        AvailableBalance = await TransactionService.GetAvailableBalanceForUserAsync(userName);
+
+        HighestInflow = await TransactionService.GetHighestInflowForUserAsync(userName);
+        LowestInflow = await TransactionService.GetLowestInflowForUserAsync(userName);
+        HighestOutflow = await TransactionService.GetHighestOutflowForUserAsync(userName);
+        LowestOutflow = await TransactionService.GetLowestOutflowForUserAsync(userName);
     }
 }
-
-
-

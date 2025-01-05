@@ -10,5 +10,17 @@
     "Password": "a1HUMd9dfxQcvs7M957fPdhhw7QGnwsRZho\u002B76y7qRg=",
     "Email": "asim@gmail.com",
     "PreferredCurrency": "EUR"
+  },
+  {
+    "UserName": "Test1",
+    "Password": "H/VOzD3QpAaSiufvLyVuPSeJs58kWI3b002YLSPYbR4=",
+    "Email": "test@gmail.com",
+    "PreferredCurrency": "EUR"
+  },
+  {
+    "UserName": "test2",
+    "Password": "pmWkWSBCL51Bfkhn79xPuKBKHz//H6B\u002BmY6G9/eieuM=",
+    "Email": "test2@gmail",
+    "PreferredCurrency": "USD"
   }
 ]

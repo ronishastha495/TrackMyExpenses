@@ -148,8 +148,18 @@ namespace BudgetEase.Services
 
             return true;  // Indicate that the payment was successful
         }
+        // Method to get the total cleared and remaining debts for a specific user
+        public async Task<(decimal clearedDebt, decimal remainingDebt)> GetDebtSummaryAsync(string userName)
+        {
+            var debts = await LoadDebtsAsync(userName);  // Load the user's debts
 
-        // Method to update the user's available balance (You may implement this differently based on your data storage mechanism)
-      
+            // Calculate the total cleared and remaining debts
+            decimal clearedDebt = debts.Where(d => d.IsCleared).Sum(d => d.Amount);  // Sum of cleared debts
+            decimal remainingDebt = debts.Where(d => !d.IsCleared).Sum(d => d.Amount);  // Sum of remaining debts
+
+            return (clearedDebt, remainingDebt);  // Return both cleared and remaining debts as a tuple
+        }
+
+
     }
 }
