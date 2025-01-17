@@ -5,174 +5,482 @@
 @inject TransactionService TransactionService
 @inject UserServices UserServices
 @inject DebtService DebtService
+@inject CurrencyService CurrencyService
 
-<h3 class="text-center my-4 text-3xl font-semibold">Dashboard</h3>
+@{
+    var loggedInUser = UserServices.GetLoggedInUser();
+}
 
-<div class="dashboard-container flex">
-    <NavMenu />
-    <div class="main-content flex-grow-1 p-4">
-        <h2 class="mb-4 text-2xl font-semibold">Dashboard Overview</h2>
-        
-        <!-- Summary Cards -->
-        <div class="summary-cards grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4">
-            <!-- Inflows Card -->
-            <div class="card shadow-lg rounded-lg p-4 bg-white">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-green-500">Total Inflows</h5>
-                    <p class="display-6 text-3xl font-bold text-green-500">@TotalInflows.ToString("C")</p>
-                </div>
+<div class="bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg">
+    <div class="container mx-auto flex justify-between items-center py-4 px-6">
+        <!-- Left Section: Currency Selector -->
+        <div class="flex items-center gap-6">
+            <div class="flex items-center gap-2">
+                <label for="currency" class="text-white font-medium">Currency:</label>
+                <select id="currency" @onchange="ChangeCurrency" class="bg-white text-gray-700 py-1 px-3 rounded-md shadow focus:ring focus:ring-purple-300">
+                    <option value="USD">USD</option>
+                    <option value="NRS">NRS</option>
+
+                </select>
             </div>
-            <!-- Outflows Card -->
-            <div class="card shadow-lg rounded-lg p-4 bg-white">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-red-500">Total Outflows</h5>
-                    <p class="display-6 text-3xl font-bold text-red-500">@TotalOutflows.ToString("C")</p>
-                </div>
-            </div>
-            <!-- Debts Card -->
-            <div class="card shadow-lg rounded-lg p-4 bg-white">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-yellow-500">Total Debts</h5>
-                    <p class="display-6 text-3xl font-bold text-yellow-500">@TotalDebts.ToString("C")</p>
-                </div>
-            </div>
-            <!-- Available Balance Card -->
-            <div class="card shadow-lg rounded-lg p-4 bg-white">
-                <div class="card-body text-center">
-                    <h5 class="card-title text-blue-500">Available Balance</h5>
-                    <p class="display-6 text-3xl font-bold text-blue-500">@AvailableBalance.ToString("C")</p>
-                </div>
-            </div>
+            <p class="text-white font-light">
+                Selected Currency: <span class="font-semibold">@CurrencyService.PreferredCurrency</span>
+            </p>
         </div>
 
-        <!-- Recent Transactions Table -->
-        <div class="recent-transactions mt-8">
-            <h3 class="text-xl font-semibold mb-4">Top 5 Recent Transactions</h3>
-            <table class="min-w-full table-auto border-collapse">
-                <thead>
-                    <tr>
-                        <th class="px-4 py-2 text-left border-b">Date</th>
-                        <th class="px-4 py-2 text-left border-b">Amount</th>
-                        <th class="px-4 py-2 text-left border-b">Category</th>
-                        <th class="px-4 py-2 text-left border-b">Description</th>
-                    </tr>
-                </thead>
-                <tbody>
-                    @foreach (var transaction in recentTransactions)
-                    {
-                        <tr class="hover:bg-gray-100">
-                            <td class="px-4 py-2 border-b">@transaction.Date.ToString("MM/dd/yyyy")</td>
-                            <td class="px-4 py-2 border-b">
-                                <span class="font-bold text-@((transaction.Category == "Debit") ? "red-500" : "green-500")">
-                                    @transaction.Amount.ToString("C")
-                                </span>
-                            </td>
-                            <td class="px-4 py-2 border-b">@transaction.Category</td>
-                            <td class="px-4 py-2 border-b">@transaction.Description</td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
+        <!-- Right Section: User Profile -->
+        <div class="flex items-center gap-3">
+            <span class="text-gray-200">Welcome,</span>
+            <span class="text-white font-semibold">@loggedInUser.UserName</span>
         </div>
     </div>
 </div>
 
+
+@if (isLoading)
+{
+    <div class="flex flex-col items-center justify-center min-h-screen bg-gray-50">
+        <div class="w-12 h-12 border-4 border-blue-500 border-t-transparent rounded-full animate-spin"></div>
+        <p class="mt-4 text-gray-600">Loading your financial data...</p>
+    </div>
+}
+else
+{
+    <div class="flex min-h-screen bg-gradient-to-br from-blue-500 via-purple-500 to-indigo-600">
+        <NavMenu />
+        <div class="flex-grow p-6 overflow-auto">
+            <h2 class="mb-6 text-2xl font-bold text-white">Dashboard </h2>
+
+            <div class="grid grid-cols-1 gap-6 md:grid-cols-2 xl:grid-cols-4">
+                <!-- Available Balance Card -->
+                <div class="p-6 bg-white bg-opacity-10 backdrop-blur-lg rounded-xl shadow-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <h6 class="text-sm font-medium text-white">Total Balance</h6>
+                        <div class="p-3 bg-white bg-opacity-20 rounded-full">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 7h8m0 0v8m0-8l-8 8-4-4-6 6"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <p class="text-3xl font-bold text-white">@ConvertToSelectedCurrency(AvailableBalance, @SelectedCurrency) @SelectedCurrency</p>
+                </div>
+
+                <!-- Total Inflows Card -->
+                <div class="p-6 bg-white bg-opacity-10 backdrop-blur-lg rounded-xl shadow-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h6 class="text-sm font-medium text-white">Total Inflows</h6>
+                            <small class="text-white text-opacity-75">Income & Deposits</small>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-20 rounded-full">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 4v16m0-16l-4 4m4-4l4 4"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        @if (TotalInflows == 0)
+                        {
+                            <h2 class="text-2xl font-bold text-white">No inflows yet</h2>
+                        }
+                        else
+                        {
+                            <h2 class="text-2xl font-bold text-white">@ConvertToSelectedCurrency(TotalInflows, @SelectedCurrency) @SelectedCurrency</h2>
+                        }
+                    </div>
+                </div>
+
+                <!-- Total Outflows Card -->
+                <div class="p-6 bg-white bg-opacity-10 backdrop-blur-lg rounded-xl shadow-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h6 class="text-sm font-medium text-white">Total Outflows</h6>
+                            <small class="text-white text-opacity-75">Expenses & Withdrawals</small>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-20 rounded-full">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 20V4m0 16l-4-4m4 4l4-4"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        @if (TotalOutflows == 0)
+                        {
+                            <h2 class="text-2xl font-bold text-white">No outflows yet</h2>
+                        }
+                        else
+                        {
+                            <h2 class="text-2xl font-bold text-white">@ConvertToSelectedCurrency(TotalOutflows, @SelectedCurrency) @SelectedCurrency</h2>
+                        }
+                    </div>
+                </div>
+
+                <!-- Total Debts Card -->
+                <div class="p-6 bg-white bg-opacity-10 backdrop-blur-lg rounded-xl shadow-lg">
+                    <div class="flex items-center justify-between mb-4">
+                        <div>
+                            <h6 class="text-sm font-medium text-white">Total Debts</h6>
+                            <small class="text-white text-opacity-75">Outstanding Balance</small>
+                        </div>
+                        <div class="p-3 bg-white bg-opacity-20 rounded-full">
+                            <svg class="w-6 h-6 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M12 8c-1.657 0-3 .895-3 2s1.343 2 3 2 3 .895 3 2-1.343 2-3 2m0-8c1.11 0 2.08.402 2.599 1M12 8V7m0 1v8m0 0v1m0-1c-1.11 0-2.08-.402-2.599-1M21 12a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                            </svg>
+                        </div>
+                    </div>
+                    <div class="mt-4">
+                        @if (TotalDebts == 0)
+                        {
+                            <h2 class="text-2xl font-bold text-white">No debts yet</h2>
+                        }
+                        else
+                        {
+                            <h2 class="text-2xl font-bold text-white">@ConvertToSelectedCurrency(TotalDebts, @SelectedCurrency) @SelectedCurrency</h2>
+                        }
+                    </div>
+                </div>
+            </div>
+
+            <!-- Transaction Insights Section -->
+            <h2 class="my-6 text-2xl font-bold text-white">Transaction Insights</h2>
+
+            <!-- Top 5 Transactions -->
+            <div class="mt-6 bg-gray-800 bg-opacity-90 backdrop-blur-lg rounded-xl shadow-lg overflow-hidden">
+                <div class="p-6 border-b border-gray-700">
+                    <h2 class="my-6 text-2xl font-bold text-white">Top 5 Transaction</h2>
+                </div>
+
+                <div class="p-0 bg-gradient-to-r from-blue-500 to-purple-600 shadow-lg">
+                    @if (TopTransactions.Count == 0)
+                    {
+                        <div class="flex flex-col items-center justify-center p-12">
+                            <svg class="w-16 h-16 text-gray-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M3 10h18M7 15h1m4 0h1m-7 4h12a3 3 0 003-3V8a3 3 0 00-3-3H6a3 3 0 00-3 3v8a3 3 0 003 3z"></path>
+                            </svg>
+                            <h5 class="mt-4 text-lg font-medium text-gray-200">No Transactions Available</h5>
+                            <p class="mt-2 text-gray-400">Start adding your transactions to see them here.</p>
+                            <button class="px-6 py-2 mt-4 text-gray-800 bg-gray-100 rounded-lg hover:bg-gray-200"
+                            @onclick="@(() => Navigation.NavigateTo("/cash-in"))">
+                                Add Transaction
+                            </button>
+                        </div>
+                    }
+                    else
+                    {
+                        <div class="overflow-x-auto">
+                            <table class="w-full border-collapse bg-gray-800">
+                                <thead>
+                                    <tr class="bg-gray-700 text-gray-300 text-sm uppercase tracking-wide">
+                                        <th class="p-4 text-center w-16">#</th>
+                                        <th class="p-4 text-left">Date</th>
+                                        <th class="p-4 text-left">Description</th>
+                                        <th class="p-4 text-left">Category</th>
+                                        <th class="p-4 text-right">Amount</th>
+                                    </tr>
+                                </thead>
+                                <tbody class="divide-y divide-gray-700">
+                                    @foreach (var (transaction, index) in TopTransactions.Select((t, i) => (t, i + 1)))
+                                    {
+                                        <tr class="hover:bg-gray-700">
+                                            <td class="p-4 text-center text-gray-400">@index</td>
+                                            <td class="p-4">
+                                                <div class="flex items-center">
+                                                    <div class="@(transaction.Amount >= 0 ? "text-green-400" : "text-red-400") mr-2">
+                                                        <svg class="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                                                            @if (transaction.Amount >= 0)
+                                                            {
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 14l-7 7m0 0l-7-7m7 7V3"></path>
+                                                            }
+                                                            else
+                                                            {
+                                                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M5 10l7-7m0 0l7 7m-7-7v18"></path>
+                                                            }
+                                                        </svg>
+                                                    </div>
+                                                    <span class="text-gray-300">@transaction.Date.ToShortDateString()</span>
+                                                </div>
+                                            </td>
+                                            <td class="p-4">
+                                                <div>
+                                                    <span class="font-medium text-gray-300">@transaction.Description</span>
+                                                    @if (!string.IsNullOrEmpty(transaction.Notes))
+                                                    {
+                                                        <small class="block text-gray-400">@transaction.Notes</small>
+                                                    }
+                                                </div>
+                                            </td>
+                                            <td class="p-4">
+                                                <span class="px-3 py-1 text-sm rounded-full
+                                        @(transaction.Amount >= 0 ? "bg-green-400 bg-opacity-20 text-green-400" : "bg-red-400 bg-opacity-20 text-red-400")">
+                                                    @transaction.Category
+                                                </span>
+                                            </td>
+                                            <td class="p-4 text-right">
+                                                <span class="font-semibold @(transaction.Amount >= 0 ? "text-green-400" : "text-red-400")">
+                                                    @ConvertToSelectedCurrency(transaction.Amount, @SelectedCurrency) @SelectedCurrency
+                                                </span>
+                                            </td>
+                                        </tr>
+                                    }
+                                </tbody>
+                                <tfoot>
+                                    <tr class="bg-gray-700 text-gray-300 font-semibold">
+                                        <td colspan="4" class="p-4 text-right">Total:</td>
+                                        <td class="p-4 text-right">
+                                            @ConvertToSelectedCurrency(TopTransactions.Sum(t => t.Amount), @SelectedCurrency) @SelectedCurrency
+                                        </td>
+                                    </tr>
+                                </tfoot>
+                            </table>
+                        </div>
+                    }
+                </div>
+            </div>
+
+
+        </div>
+    </div>
+
+    <!-- Pending Debts -->
+    <div class="mt-6 bg-purple bg-opacity-10 backdrop-blur-lg rounded-xl overflow-hidden">
+        <div class="p-6 border-b border-black border-opacity-10">
+            <h2 class="my-6 text-2xl font-bold text-gray">Pending Debts</h2>
+        </div>
+
+        <div class="p-0">
+            @if (PendingDebts.Count == 0)
+            {
+                <div class="flex flex-col items-center justify-center p-12">
+                    <svg class="w-16 h-16 text-gray opacity-50" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                        <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z"></path>
+                    </svg>
+                    <h3 class="mt-4 text-lg font-medium text-gray">No Pending Debts</h3>
+                    <h3 class="mt-2 text-gray text-opacity-75">All debts are cleared. Great job!</h3>
+                </div>
+            }
+            else
+            {
+                <div class="overflow-x-auto">
+                    <table class="w-full">
+                        <thead>
+                            <tr class="text-black-50t-opacity-80 border-b border-gray border-opacity-10">
+                                <th class="p-4 text-center w-16">#</th>
+                                <th class="p-4 text-left">Source</th>
+                                <th class="p-4 text-center">Due Date</th>
+                                <th class="p-4 text-right">Amount</th>
+                                <th class="p-4 text-center">Status</th>
+                            </tr>
+                        </thead>
+                        <tbody>
+                            @foreach (var (debt, index) in PendingDebts.Select((d, i) => (d, i + 1)))
+                            {
+                                <tr class="border-b border-gray border-opacity-5 text-black hover:bg-gray hover:bg-opacity-5">
+                                    <td class="p-4 text-center">@index</td>
+                                    <td class="p-4">
+                                        <div>
+                                            <span class="font-medium">@debt.Source</span>
+                                            @if (!string.IsNullOrEmpty(debt.Notes))
+                                            {
+                                                <small class="block text-black text-opacity-60">@debt.Notes</small>
+                                            }
+                                        </div>
+                                    </td>
+                                    <td class="p-4 text-center">@debt.DueDate.ToShortDateString()</td>
+                                    <td class="p-4 text-right">
+                                        <span class="font-semibold text-red-400">
+                                            @ConvertToSelectedCurrency(debt.Amount, @SelectedCurrency) @SelectedCurrency
+                                        </span>
+                                    </td>
+                                    <td class="p-4 text-center">
+                                        <span class="px-3 py-1 text-sm rounded-full bg-yellow-400 bg-opacity-20 text-yellow-400">
+                                            Pending
+                                        </span>
+                                    </td>
+                                </tr>
+                            }
+                        </tbody>
+                        <tfoot>
+                            <tr class="bg-black font-semibold text-white">
+                                <td colspan="3" class="p-4 text-right">Total Pending:</td>
+                                <td class="p-4 text-right">
+                                    @ConvertToSelectedCurrency(PendingDebts.Sum(d => d.Amount), @SelectedCurrency) @SelectedCurrency
+                                </td>
+                                <td></td>
+                            </tr>
+                        </tfoot>
+                    </table>
+                </div>
+            }
+        </div>
+    </div>
+
+
+}
+
 <style>
     .dashboard-container {
-        display: flex;
-        min-height: 100vh;
-        background-color: #f8f9fa;
+    display: flex;
+    min-height: 100vh;
+    background-color: #f8f9fa;
     }
 
     .main-content {
-        flex-grow: 1;
-        padding: 1.5rem;
-        background-color: #fff;
-        border-radius: 8px;
+    flex-grow: 1;
+    padding: 1.5rem;
+    background-color: #fff;
+    border-radius: 8px;
+    box-shadow: 0 0 20px rgba(0, 0, 0, 0.05);
     }
 
     .summary-cards .card {
-        background-color: #fff;
-        border: 1px solid #ddd;
-        box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    background-color: #fff;
+    border: 1px solid #ddd;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    height: 100%;
+    }
+
+    .card-title {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
     }
 
     .display-6 {
-        font-size: 2.5rem;
+    font-size: 2.5rem;
+    margin-bottom: 0;
     }
 
-    .text-center {
-        text-align: center;
-    }
-
-    /* Adjust card sizes and make them responsive */
     .card {
-        transition: transform 0.3s ease-in-out;
+    transition: all 0.3s ease-in-out;
     }
 
     .card:hover {
-        transform: translateY(-5px);
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
     }
 
-    /* Gradient Button */
-    .gradient-button {
-        background: linear-gradient(to right, #4f46e5, #6d28d9);
-        color: white;
-        padding: 10px 20px;
-        border: none;
-        border-radius: 999px;
-        cursor: pointer;
-        transition: background 0.3s;
+    .loading-container {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    min-height: 50vh;
     }
 
-    .gradient-button:hover {
-        background: linear-gradient(to right, #6d28d9, #4f46e5);
+    .empty-state {
+    background-color: #f8f9fa;
+    border-radius: 8px;
+    padding: 2rem;
+    }
+
+    .empty-state i {
+    font-size: 3rem;
+    color: #6c757d;
+    }
+    /* Shimmer effect for loading state */
+    .loading-shimmer {
+    background: linear-gradient(90deg, #f0f0f0 25%, #e0e0e0 50%, #f0f0f0 75%);
+    background-size: 200% 100%;
+    animation: shimmer 1.5s infinite;
+    }
+
     }
 </style>
-
 @code {
-    private decimal TotalInflows { get; set; } = 0;
     private decimal TotalOutflows { get; set; } = 0;
     private decimal TotalDebts { get; set; } = 0;
     private decimal AvailableBalance { get; set; } = 0;
-    private List<Transactions> recentTransactions = new List<Transactions>(); // List to hold recent transactions
-    private Transactions transaction = new Transactions(); // Assuming you have a Transactions model
+    private string SelectedCurrency;
+    private decimal ClearedDebt { get; set; }
+    private decimal RemainingDebt { get; set; }
+    private Transactions? HighestInflow { get; set; }
+    private Transactions? LowestInflow { get; set; }
+    private Transactions? HighestOutflow { get; set; }
+    private Transactions? LowestOutflow { get; set; }
+    private Transactions? HighestDebt { get; set; }
+    private Transactions? LowestDebt { get; set; }
+
+    private List<Transactions> TopTransactions { get; set; } = new List<Transactions>();
+    private List<Debt> PendingDebts { get; set; } = new List<Debt>();
+
+    private bool isLoading = true;
+    private string? error;
+    private Transactions transaction = new Transactions();
+
+    private bool HasAnyTransactions =>
+        HighestInflow != null || HighestOutflow != null ||
+        LowestInflow != null || LowestOutflow != null;
 
     protected override async Task OnInitializedAsync()
     {
+        await LoadData();
+    }
+
+    private async Task LoadData()
+    {
         try
         {
-            // Fetch logged-in user
-            var loggedInUser = UserServices.GetLoggedInUser(); // Ensure this is an async call
+            isLoading = true;
+            error = null;
+
+            var loggedInUser = await UserServices.;
 
             if (loggedInUser == null)
             {
-                throw new InvalidOperationException("User is not logged in.");
+                error = "User not logged in.";
+                return;
             }
 
-            // Add the UserName to the transaction
-            transaction.UserName = loggedInUser.UserName;
+            // Use currency selection
+            SelectedCurrency = GlobalState.Instance.PreferredCurrency;
 
-            // Fetch the data by passing the logged-in user's username
+            transaction.UserName = loggedInUser.UserName;
             await RefreshData(loggedInUser.UserName);
+
+            TopTransactions = await TransactionService.GetTop5RecentTransactionsAsync(loggedInUser.UserName);
+            PendingDebts = await DebtService.GetPendingDebtsAsync(loggedInUser.UserName);
         }
         catch (Exception ex)
         {
-            // Handle user not logged in or any other exception
-            Console.WriteLine($"Error: {ex.Message}");
+            error = $"An error occurred: {ex.Message}";
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 
     private async Task RefreshData(string userName)
     {
-        // Fetch transaction-related data by passing the userName
+        var debtSummary = await DebtService.GetDebtSummaryAsync(userName);
+        ClearedDebt = debtSummary.clearedDebt;
+        RemainingDebt = debtSummary.remainingDebt;
+
         TotalInflows = await TransactionService.GetTotalInflowsForUserAsync(userName);
         TotalOutflows = await TransactionService.GetTotalOutflowsForUserAsync(userName);
-        TotalDebts = await DebtService.GetTotalDebtsAsync(userName); // Fetch total debts
-        AvailableBalance = await TransactionService.GetAvailableBalanceForUserAsync(userName); // Fetch available balance
+        TotalDebts = await DebtService.GetTotalDebtsAsync(userName);
+        AvailableBalance = await TransactionService.GetTotalBalanceForUserAsync(userName);
+
+        HighestInflow = await TransactionService.GetHighestInflowForUserAsync(userName);
+        LowestInflow = await TransactionService.GetLowestInflowForUserAsync(userName);
+        HighestOutflow = await TransactionService.GetHighestOutflowForUserAsync(userName);
+        LowestOutflow = await TransactionService.GetLowestOutflowForUserAsync(userName);
     }
 
-    
+    private async Task ChangeCurrency(ChangeEventArgs e)
+    {
+        SelectedCurrency = e.Value?.ToString() ?? "USD";
+        CurrencyService.PreferredCurrency = SelectedCurrency;
 
+        Console.WriteLine($"[DEBUG] Currency changed to: {SelectedCurrency}");
 
+        // Recalculate data with the new currency
+        await RefreshData(UserServices.GetLoggedInUser().UserName);
+    }
+
+    private decimal ConvertToSelectedCurrency(decimal amount, string currency)
+    {
+        var convertedAmount = CurrencyService.ConvertAmount(amount, currency);
+        Console.WriteLine($"[DEBUG] Conversion: {amount} {CurrencyService.PreferredCurrency} -> {convertedAmount}");
+        return convertedAmount;
+    }
 }

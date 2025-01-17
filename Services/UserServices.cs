@@ -8,40 +8,59 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using TrackMyExpenses.Models;
 
-namespace TrackMyExpenses.Services
+namespace BudgetEase.Services
 {
     public class UserServices
     {
-        private static readonly string DesktopPath = Environment.GetFolderPath(Environment.SpecialFolder.Desktop);
-        private static readonly string FolderPath = Path.Combine(DesktopPath, "LocalDB");
-        private static readonly string FilePath = Path.Combine(FolderPath, "users.json");
+        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\TrackMyExpenses\LocalDB\users.json";
 
-        //Added a static variable to hold the logged-in user Information
         private static User? _loggedInUser;
-
         public List<User> LoadUsers()
         {
             if (!File.Exists(FilePath))
-                return new List<User>();  // Return an empty list if no users exist
+            {
+
+                return new List<User>();
+            }
 
             var json = File.ReadAllText(FilePath);
-            return JsonSerializer.Deserialize<List<User>>(json) ?? new List<User>();
+
+
+            if (string.IsNullOrWhiteSpace(json))
+            {
+
+                return new List<User>();
+            }
+
+            try
+            {
+                var users = JsonSerializer.Deserialize<List<User>>(json);
+                return users ?? new List<User>();
+            }
+            catch (JsonException ex)
+            {
+
+                Console.WriteLine($"JSON deserialization failed: {ex.Message}");
+                return new List<User>();
+            }
         }
+
+
         public void SaveUsers(List<User> users)
         {
-            if (!Directory.Exists(FolderPath))
+            // Ensure the directory exists
+            var directory = Path.GetDirectoryName(FilePath);
+            if (!Directory.Exists(directory))
             {
-                Directory.CreateDirectory(FolderPath);
+                Directory.CreateDirectory(directory);
             }
 
-            if (!File.Exists(FilePath))
-            {
-                File.WriteAllText(FilePath, "[]");
-            }
-
+            // Serialize and save user data
             var json = JsonSerializer.Serialize(users, new JsonSerializerOptions { WriteIndented = true });
             File.WriteAllText(FilePath, json);
         }
+
+
         public string HashPassword(string password)
         {
             using var sha256 = SHA256.Create();
@@ -49,12 +68,6 @@ namespace TrackMyExpenses.Services
             var hash = sha256.ComputeHash(bytes);
             return Convert.ToBase64String(hash);  // Return hashed password
         }
-        public bool ValidatePassword(string inputPassword, string storedPassword)
-        {
-            var hashedInputPassword = HashPassword(inputPassword);
-            return hashedInputPassword == storedPassword;
-        }
-
         public void SetLoggedInUser(User user)
         {
             _loggedInUser = user;
@@ -63,6 +76,16 @@ namespace TrackMyExpenses.Services
         public User? GetLoggedInUser()
         {
             return _loggedInUser;
+        }
+        public bool ValidatePassword(string inputPassword, string storedPassword)
+        {
+            var hashedInputPassword = HashPassword(inputPassword);
+            return hashedInputPassword == storedPassword;
+        }
+
+        public string GetPreferredCurrency()
+        {
+            return _loggedInUser?.PreferredCurrency ?? "USD";
         }
     }
 }

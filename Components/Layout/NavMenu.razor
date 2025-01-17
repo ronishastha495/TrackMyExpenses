@@ -1,59 +1,72 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="">TrackMyExpenses</a>
-        <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css" rel="stylesheet">
-
+        <a class="navbar-brand" href="#">TrackMyExpenses</a>
+        <input type="checkbox" id="navbar-toggler" title="Navigation menu" class="navbar-toggler" />
     </div>
 </div>
 
-<input type="checkbox" title="Navigation menu" class="navbar-toggler" />
-
-<div class="nav-scrollable" onclick="document.querySelector('.navbar-toggler').click()">
-    <nav class="flex-column">
-        <!-- Dashboard -->
-        <div class="nav-item px-3">
-            <a class="nav-link" href="/dashboard">
-                <i class="fas fa-tachometer-alt"></i>   Dashboard
-            </a>
-        </div>
-       
-        <!-- Cash In -->
-        <div class="nav-item px-3">
-                <a class="nav-link" href="/cash-inflow">
-                <i class="fas fa-arrow-circle-down">   </i>   Cash In
-            </a>
-        </div>
-
-                <!-- Cash Out -->
-        <div class="nav-item px-3">
-            <a class="nav-link" href="/add-cash-out">
-                <i class="fas fa-arrow-circle-down">   </i>   Cash Out
-            </a>
-        </div>
-
-        <!-- Debt -->
-        <div class="nav-item px-3">
-            <a class="nav-link" href="/add-debt">
-                <i class="fas fa-arrow-circle-down">   </i>   Debt
-            </a>
-        </div>
-        <!-- Transaction -->
-        <div class="nav-item px-3">
-            <a class="nav-link" href="/view-transactions"
-                <i class="fas fa-wallet">   </i>   My Transaction
-            </a>
-        </div>
-         <!-- Clear debt -->
-        <div class="nav-item px-3">
-            <a class="nav-link" href="/debt-payment"
-                <i class="fas fa-wallet">   </i>  Clear Debt
-            </a>
-        </div>
+<!-- Sidebar -->
+<div class="nav-scrollable bg-gradient-to-br from-blue-500 to-purple-600">
+    <nav class="flex flex-col">
 
         <div class="nav-item px-3">
-            <a class="nav-link" href="/">
-                <i class="fas fa-wallet">   </i>   Logout
-            </a>
+            <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/dashboard">
+                <span class="bi bi-speedometer2 mr-2" aria-hidden="true"></span> Dashboard
+            </NavLink>
+
+        <div class="nav-item px-3">
+                <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/cash-in">
+                <span class="bi bi-plus-square-fill mr-2" aria-hidden="true"></span> Cash In
+            </NavLink>
         </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/add-cash-out">
+                <span class="bi bi-list-check mr-2" aria-hidden="true"></span> Cash Out
+            </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/view-transactions">
+                    <span class="bi bi-plus-square-fill mr-2" aria-hidden="true"></span> Transactions
+                </NavLink>
+            </div>
+        </div>
+        <div class="nav-item px-3">
+            <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/add-debt">
+                <span class="bi bi-exclamation-triangle-fill mr-2" aria-hidden="true"></span> Add Debt
+            </NavLink>
+        </div>
+          <div class="nav-item px-3">
+            <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/debt-payment">
+                <span class="bi bi-exclamation-triangle-fill mr-2" aria-hidden="true"></span> Pay Debt
+            </NavLink>
+        </div>
+
     </nav>
 </div>
+<style>
+	@@ -53,13 +53,11 @@
+    .nav-scrollable {
+        width: 250px;
+        height: 100vh;
+        position: fixed;
+        top: 0;
+        left: 0;
+        display: flex;
+        flex-direction: column;
+        padding-top: 1rem;
+    }
+	@@ -68,22 +66,11 @@
+        }
+        .nav-scrollable .nav-link {
+            text-decoration: none;
+            display: flex;
+            align-items: center;
+        }
+    .top-row {
+        margin-left: 250px; /* Offset the content for sidebar width */
+    }
+	@@ -92,6 +79,4 @@
+    #navbar-toggler:checked + .nav-scrollable {
+        display: none;
+    }
+</style>

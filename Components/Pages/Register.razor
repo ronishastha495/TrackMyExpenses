@@ -1,117 +1,98 @@
-﻿@page "/register"
+﻿@page "/"
 @using TrackMyExpenses.Model
-@using TrackMyExpenses.Models
-@inject TrackMyExpenses.Services.UserServices UserServices
+@using TrackMyExpenses.Services
+
+@inject UserServices UserServices
 @inject NavigationManager NavigationManager
 
-<h3>Create an Account</h3>
+<div class="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
+    <div class="w-full max-w-sm p-6 bg-white rounded-lg shadow-md">
+        <h3 class="text-center text-2xl font-semibold text-gray-800 mb-4">Login</h3>
 
-<div style="max-width: 400px; margin: 0 auto; padding: 20px; border: 1px solid #ccc; border-radius: 8px; background-color: #f9f9f9;">
-    <div style="margin-bottom: 10px;">
-        <label for="username" style="display: block; font-size: 14px; font-weight: bold;">Username</label>
-        <input id="username" @bind="RegisterUsername" placeholder="Username"
-               style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
-    </div>
+        <!-- Username Field -->
+        <div class="mb-4">
+            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
+            <input id="username" @bind="LoginUsername" placeholder="Enter your username"
+                class="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
+        </div>
 
-    <div style="margin-bottom: 10px;">
-        <label for="email" style="display: block; font-size: 14px; font-weight: bold;">Email</label>
-        <input id="email" @bind="RegisterEmail" placeholder="Email"
-               style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
-    </div>
-    <!-- Currency Field -->
-    <div style="margin-bottom: 20px;">
-        <label for="currency" style="display: block; font-size: 14px; font-weight: bold;">Currency</label>
-        <select id="currency" @bind="PreferredCurrency"
-                style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;">
-            <option value="USD">USD</option>
-            <option value="EUR">EUR</option>
-            <option value="NPR">NPR</option>
-            <option value="INR">INR</option>
-        </select>
-    </div>
+        <!-- Password Field -->
+        <div class="mb-4">
+            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
+            <input id="password" @bind="LoginPassword" type="password" placeholder="Enter your password"
+                class="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
+        </div>
 
-    <div style="margin-bottom: 20px;">
-        <label for="password" style="display: block; font-size: 14px; font-weight: bold;">Password</label>
-        <input id="password" @bind="RegisterPassword" type="password" placeholder="Password"
-               style="width: 100%; padding: 8px; margin-top: 5px; border: 1px solid #ccc; border-radius: 4px;" />
-    </div>
+        <!-- Login Button -->
+        <button @onclick="HandleLogin"
+            class="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
+            Login
+        </button>
 
-    <button @onclick="HandleRegistration"
-            style="width: 100%; padding: 10px; background-color: #4CAF50; color: white; font-weight: bold; border: none; border-radius: 4px; cursor: pointer;">
-        Register
-    </button>
+        <!-- Error Message Display -->
+        @if (!string.IsNullOrEmpty(Message))
+        {
+                <p class="text-red-500 text-sm mt-4">@Message</p>
+        }
 
-    @if (!string.IsNullOrEmpty(Message))
-    {
-            <p style="color: red; margin-top: 10px;">@Message</p>
-    }
-
-    <div style="margin-top: 20px; text-align: center;">
-        <p style="font-size: 14px; color: #555;">
-            Already have an account? <NavLink href="/" style="color: #007bff; text-decoration: none;">Login here</NavLink> .
-        </p>
+        <!-- Register Link -->
+        <div class="mt-6 text-center">
+            <p class="text-sm text-gray-600">
+                Don't have an account? <a href="#" @onclick="NavigateToRegister" class="text-blue-500 hover:underline">Register</a>
+            </p>
+        </div>
     </div>
 </div>
 
 @code {
-    private string RegisterUsername = "";
-    private string RegisterPassword = "";
-    private string RegisterEmail = "";
-    private string PreferredCurrency = "USD";
+    private string LoginUsername = "";
+    private string LoginPassword = "";
     private string Message = "";
 
     private List<User> Users = new();
-
+    private string SelectedCurrency = "";
     protected override void OnInitialized()
     {
-        // Load existing users from UserService
+        // Load existing users from UserServices
         Users = UserServices.LoadUsers();
     }
 
-    private async Task HandleRegistration()
+    private async void HandleLogin()
     {
         // Check if all fields are filled
-        if (string.IsNullOrWhiteSpace(RegisterUsername) || string.IsNullOrWhiteSpace(RegisterPassword) || string.IsNullOrWhiteSpace(RegisterEmail))
+        if (string.IsNullOrWhiteSpace(LoginUsername) || string.IsNullOrWhiteSpace(LoginPassword))
         {
-            Message = "All fields are required.";
+            Message = "Username and password are required.";
             return;
         }
 
-        // Check if the username already exists
-        if (Users.Any(u => u.UserName == RegisterUsername))
+        var user = Users.FirstOrDefault(u => u.UserName == LoginUsername);
+        if (user == null)
         {
-            Message = "Username already exists.";
+            Message = "User not found.";
             return;
         }
 
-        // Check if the email is already in use (Optional)
-        if (Users.Any(u => u.Email == RegisterEmail))
+        if (!UserServices.ValidatePassword(LoginPassword, user.Password))
         {
-            Message = "Email already in use.";
+            Message = "Invalid password.";
             return;
         }
 
-        // Create new user object
-        var newUser = new User
-            {
-                UserName = RegisterUsername,
-                Password = UserServices.HashPassword(RegisterPassword), // Hash the password
-                Email = RegisterEmail,
-                PreferredCurrency = PreferredCurrency // Save the preferred currency
-            };
+        UserServices.SetLoggedInUser(user);
+        SelectedCurrency = user.PreferredCurrency;
 
-        // Add new user to the list
-        Users.Add(newUser);
+        // Successful login
+        Message = "Login successful. Redirecting to home...";
 
-        // Save the updated user list
-        UserServices.SaveUsers(Users);
+        // Redirect after a delay
+        await Task.Delay(2000);
+        NavigationManager.NavigateTo("/dashboard");
+    }
 
-        // Set success message and redirect after delay
-        Message = "Registration successful. Redirecting to login...";
-        await Task.Delay(2000); // Wait for 2 seconds
-
-        // Redirect to login page
-        NavigationManager.NavigateTo("/");
+    private void NavigateToRegister()
+    {
+        // Redirect to registration page
+        NavigationManager.NavigateTo("/register");
     }
 }
-

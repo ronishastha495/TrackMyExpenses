@@ -1,10 +1,14 @@
 ﻿using System.Text.Json;
+using TrackMyExpenses.Services;
+using Microsoft.AspNetCore.Components;
+using OfficeOpenXml;
+using OfficeOpenXml.Style;
 
 namespace TrackMyExpenses.Services
 {
     public class TransactionService
     {
-        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\LocalDB\transactions.json";
+        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\TrackMyExpenses\LocalDB\transactions.json";
 
         // Load transactions from the JSON file
         public async Task<List<Transactions>> LoadTransactionsAsync()
@@ -26,37 +30,63 @@ namespace TrackMyExpenses.Services
         // Add a new transaction
         public async Task AddTransactionAsync(Transactions transaction)
         {
-            // Ensure UserName is provided and associated with the transaction
-            if (string.IsNullOrEmpty(transaction.UserName))
+            if (transaction == null)
+            {
+                throw new ArgumentNullException(nameof(transaction), "Transaction cannot be null.");
+            }
+
+            // Validate user name
+            if (string.IsNullOrWhiteSpace(transaction.UserName))
             {
                 throw new ArgumentException("UserName must be provided for the transaction.");
             }
 
-            // Set the category if it's null based on the amount
-            if (transaction.Category == null)
+            // Set category if not explicitly provided
+            if (string.IsNullOrEmpty(transaction.Category))
             {
                 transaction.Category = transaction.Amount > 0 ? "credit" : "debit";
             }
 
-            // If it's a debit transaction and the amount is negative, check the available balance
-            if (transaction.Category == "debit" && transaction.Amount < 0)
+            // Check for invalid amounts (0 or near-zero transactions)
+            if (transaction.Amount == 0)
+            {
+                throw new InvalidOperationException("Transaction amount must not be zero.");
+            }
+
+            // Check for negative balances
+            if ((transaction.Category == "debit" || transaction.TransactionType == "outflow") && transaction.Amount < 0)
             {
                 decimal availableBalance = await GetAvailableBalanceForUserAsync(transaction.UserName);
-                if (Math.Abs(transaction.Amount) > availableBalance)
+
+                if (availableBalance < Math.Abs(transaction.Amount))
                 {
                     throw new InvalidOperationException("Insufficient balance for this transaction.");
                 }
             }
 
-            // Load current transactions and add the new one
+            // Add the transaction
             var transactions = await LoadTransactionsAsync();
+
+            // Additional validation to avoid duplicate transactions (optional)
+            bool isDuplicate = transactions.Any(t =>
+                t.UserName == transaction.UserName &&
+                t.Date == transaction.Date &&
+                t.Amount == transaction.Amount &&
+                t.Category == transaction.Category &&
+                t.Description == transaction.Description);
+
+            if (isDuplicate)
+            {
+                throw new InvalidOperationException("Duplicate transaction detected.");
+            }
+
             transactions.Add(transaction);
 
-            // Save the updated transactions back to the file
+            // Save transactions persistently
             await SaveTransactionsAsync(transactions);
         }
 
-        // Calculate total inflows for a specific user
+
         public async Task<decimal> GetTotalInflowsForUserAsync(string userName)
         {
             var transactions = await LoadTransactionsAsync();
@@ -65,7 +95,7 @@ namespace TrackMyExpenses.Services
                 .Sum(t => t.Amount);
         }
 
-        // Calculate total outflows for a specific user
+
         public async Task<decimal> GetTotalOutflowsForUserAsync(string userName)
         {
             var transactions = await LoadTransactionsAsync();
@@ -73,9 +103,50 @@ namespace TrackMyExpenses.Services
                 .Where(t => t.UserName == userName && t.Category == "debit")
                 .Sum(t => Math.Abs(t.Amount));
         }
+        // Get the highest inflow transaction for a specific user
+        public async Task<Transactions?> GetHighestInflowForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "credit")
+                .OrderByDescending(t => t.Amount)
+                .FirstOrDefault();
+        }
+
+        // Get the lowest inflow transaction for a specific user
+        public async Task<Transactions?> GetLowestInflowForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "credit")
+                .OrderBy(t => t.Amount)
+                .FirstOrDefault();
+        }
+
+        // Get the highest outflow transaction for a specific user
+        public async Task<Transactions?> GetHighestOutflowForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "debit")
+                .OrderByDescending(t => t.Amount)
+                .FirstOrDefault();
+        }
+
+        // Get the lowest outflow transaction for a specific user
+        public async Task<Transactions?> GetLowestOutflowForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            return transactions
+                .Where(t => t.UserName == userName && t.Category == "debit")
+                .OrderBy(t => t.Amount)
+                .FirstOrDefault();
+        }
+
+
 
         // Get available balance for a specific user
-        public  async Task<decimal> GetAvailableBalanceForUserAsync(string userName)
+        public async Task<decimal> GetAvailableBalanceForUserAsync(string userName)
         {
             var transactions = await LoadTransactionsAsync();
 
@@ -83,73 +154,94 @@ namespace TrackMyExpenses.Services
             decimal totalCredit = transactions
                 .Where(t => t.UserName == userName && t.Category == "credit")
                 .Sum(t => t.Amount);
-            decimal totalDebit = transactions
-                .Where(t => t.UserName == userName && t.Category == "debit")
+            var debtService = new DebtService();
+
+
+            decimal totalDebts = await debtService.GetTotalDebtsAsync(userName);
+
+
+            return totalCredit + totalDebts;
+        }
+
+        // Get total balance (credit + debit) for a specific user
+        public async Task<decimal> GetTotalBalanceForUserAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+
+            // Calculate total credit for a specific user
+            decimal totalCredit = transactions
+                .Where(t => t.UserName == userName && t.Category == "credit")
                 .Sum(t => t.Amount);
+            decimal totalDebit = transactions
+               .Where(t => t.UserName == userName && t.Category == "debit")
+               .Sum(t => t.Amount);
 
-            // Return the available balance for the user
-            return totalCredit - totalDebit;
+
+            var debtService = new DebtService();
+
+
+            decimal totalDebts = await debtService.GetTotalDebtsAsync(userName);
+
+
+            return totalCredit + totalDebts - totalDebit;
         }
 
-        // Remove a transaction by user
-        public async Task RemoveTransactionForUserAsync(string transactionId, string userName)
-        {
-            var transactions = await LoadTransactionsAsync();
-            var transactionToRemove = transactions
-                .FirstOrDefault(t => t.Id == transactionId && t.UserName == userName);
-            if (transactionToRemove != null)
-            {
-                transactions.Remove(transactionToRemove);
-                await SaveTransactionsAsync(transactions);
-            }
-        }
 
-        // Update a transaction for a specific user
-        public async Task UpdateTransactionForUserAsync(string transactionId, string userName, Transactions updatedTransaction)
-        {
-            var transactions = await LoadTransactionsAsync();
-            var existingTransaction = transactions
-                .FirstOrDefault(t => t.Id == transactionId && t.UserName == userName);
 
-            if (existingTransaction != null)
-            {
-                existingTransaction.Amount = updatedTransaction.Amount;
-                existingTransaction.Category = updatedTransaction.Category;
-                existingTransaction.Description = updatedTransaction.Description;
-                existingTransaction.Date = updatedTransaction.Date;
-                existingTransaction.Notes = updatedTransaction.Notes;
-                existingTransaction.Tags = updatedTransaction.Tags ?? new List<string>();
-                existingTransaction.IsDebt = updatedTransaction.IsDebt;
-                existingTransaction.DebtAmount = updatedTransaction.DebtAmount;
-                existingTransaction.DueDate = updatedTransaction.DueDate;
-                existingTransaction.IsPendingDebt = updatedTransaction.IsPendingDebt;
-                existingTransaction.AmountPaidToClearDebt = updatedTransaction.AmountPaidToClearDebt;
-                existingTransaction.BalanceRequired = updatedTransaction.BalanceRequired;
 
-                await SaveTransactionsAsync(transactions);
-            }
-        }
 
-        public async Task<List<Transactions>> FilterTransactionsForUserAsync(string userName, string? category = null, List<string>? tags = null, DateTime? startDate = null, DateTime? endDate = null)
+
+        public async Task<List<Transactions>> FilterTransactionsForUserAsync(
+     string userName,
+     string? category = null,
+     List<string>? tags = null,
+     DateTime? startDate = null,
+     DateTime? endDate = null,
+     string? searchTitle = null,
+     bool sortByDateDescending = false
+ )
         {
             // Load all transactions asynchronously
             var transactions = await LoadTransactionsAsync();
 
             // Filter the transactions based on the provided criteria and userName
             var filteredTransactions = transactions
-                .Where(t => t.UserName == userName) // Ensure transactions belong to the user
-                                                    // Filter by category if provided
+                .Where(t => t.UserName == userName)
+
                 .Where(t => string.IsNullOrEmpty(category) || t.Category.Equals(category, StringComparison.OrdinalIgnoreCase))
-                // Filter by tags if provided
+
                 .Where(t => tags == null || !tags.Any() || tags.All(tag => t.Tags.Contains(tag, StringComparer.OrdinalIgnoreCase)))
                 // Filter by start date if provided
                 .Where(t => !startDate.HasValue || t.Date >= startDate.Value)
                 // Filter by end date if provided
                 .Where(t => !endDate.HasValue || t.Date <= endDate.Value)
+                // Search by title if provided
+                .Where(t => string.IsNullOrEmpty(searchTitle) || t.Title.Contains(searchTitle, StringComparison.OrdinalIgnoreCase))
                 .ToList();
+
+            // Sort transactions by date if specified
+            filteredTransactions = sortByDateDescending
+                ? filteredTransactions.OrderByDescending(t => t.Date).ToList()
+                : filteredTransactions.OrderBy(t => t.Date).ToList();
 
             return filteredTransactions;
         }
+
+        // Get the top 5 most recent transactions for a specific user
+        public async Task<List<Transactions>> GetTop5RecentTransactionsAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+
+            // Filter the transactions for the specified user
+            var userTransactions = transactions
+                .Where(t => t.UserName == userName)
+                .OrderByDescending(t => t.Date)
+                .Take(5)
+                .ToList();
+
+            return userTransactions;
+        }
+
 
         // Search transactions for a specific user by description
         public async Task<List<Transactions>> SearchTransactionsForUserAsync(string userName, string searchQuery)
@@ -159,6 +251,51 @@ namespace TrackMyExpenses.Services
                 .Where(t => t.UserName == userName && t.Description.Contains(searchQuery, StringComparison.OrdinalIgnoreCase))
                 .ToList();
         }
+
+        public async Task<string> GenerateTransactionExcelAsync(string userName)
+        {
+            var transactions = await LoadTransactionsAsync();
+            var userTransactions = transactions.Where(t => t.UserName == userName).ToList();
+
+            var filePath = Path.Combine(Path.GetTempPath(), $"{userName}_transactions.xlsx");
+
+            using (var package = new ExcelPackage())
+            {
+                var worksheet = package.Workbook.Worksheets.Add("Transactions");
+
+                // Add header
+                worksheet.Cells[1, 1].Value = "Date";
+                worksheet.Cells[1, 2].Value = "Description";
+                worksheet.Cells[1, 3].Value = "Category";
+                worksheet.Cells[1, 4].Value = "Amount";
+                worksheet.Cells[1, 5].Value = "Tags";
+
+                using (var range = worksheet.Cells[1, 1, 1, 5])
+                {
+                    range.Style.Font.Bold = true;
+                    range.Style.HorizontalAlignment = ExcelHorizontalAlignment.Center;
+                    range.Style.Fill.PatternType = ExcelFillStyle.Solid;
+                    range.Style.Fill.BackgroundColor.SetColor(System.Drawing.Color.LightGray);
+                }
+
+                // Add transactions
+                for (int i = 0; i < userTransactions.Count; i++)
+                {
+                    var transaction = userTransactions[i];
+                    worksheet.Cells[i + 2, 1].Value = transaction.Date.ToShortDateString();
+                    worksheet.Cells[i + 2, 2].Value = transaction.Description;
+                    worksheet.Cells[i + 2, 3].Value = transaction.Category;
+                    worksheet.Cells[i + 2, 4].Value = transaction.Amount;
+                    worksheet.Cells[i + 2, 5].Value = string.Join(", ", transaction.Tags);
+                }
+
+                worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
+                await package.SaveAsAsync(new FileInfo(filePath));
+            }
+
+            return filePath;
+        }
+
     }
 }
 
