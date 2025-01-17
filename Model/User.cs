@@ -1,6 +1,6 @@
 ﻿using System;
 
-namespace BudgetEase.Model
+namespace TrackMyExpenses.Model
 {
     public class User
     {

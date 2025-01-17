@@ -1,5 +1,5 @@
 ﻿using Microsoft.Extensions.Logging;
-using BudgetEase.Services;
+using TrackMyExpenses.Services;
 using Blazored.Modal;
 using Microsoft.JSInterop;
 
@@ -24,6 +24,8 @@ namespace BudgetEase
             builder.Services.AddSingleton<UserServices>();
             builder.Services.AddSingleton<TransactionService>();
             builder.Services.AddSingleton<DebtService>();
+            builder.Services.AddScoped<CurrencyService>();
+
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();

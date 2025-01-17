@@ -4,7 +4,7 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 
-namespace BudgetEase.Model
+namespace TrackMyExpenses.Model
 {
     public class Debt
     {

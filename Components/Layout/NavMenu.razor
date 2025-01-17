@@ -1,46 +1,46 @@
 ﻿<div class="top-row ps-3 navbar navbar-dark">
     <div class="container-fluid">
-        <a class="navbar-brand" href="#">BudgetEase</a>
+        <a class="navbar-brand" href="#">TrackMyExpenses</a>
         <input type="checkbox" id="navbar-toggler" title="Navigation menu" class="navbar-toggler" />
     </div>
 </div>
 
 <!-- Sidebar -->
-<div class="nav-scrollable">
-    <nav class="flex-column">
- 
+<div class="nav-scrollable bg-gradient-to-br from-blue-500 to-purple-600">
+    <nav class="flex flex-col">
+
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/dashboard">
-                <span class="bi bi-speedometer2" aria-hidden="true"></span> Dashboard
+            <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/dashboard">
+                <span class="bi bi-speedometer2 mr-2" aria-hidden="true"></span> Dashboard
+            </NavLink>
+
+        <div class="nav-item px-3">
+                <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/cash-in">
+                <span class="bi bi-plus-square-fill mr-2" aria-hidden="true"></span> Cash In
             </NavLink>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/view-transactions">
-                <span class="bi bi-plus-square-fill" aria-hidden="true"></span> Transactions
+            <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/add-cash-out">
+                <span class="bi bi-list-check mr-2" aria-hidden="true"></span> Cash Out
             </NavLink>
+            </div>
+            <div class="nav-item px-3">
+                <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/view-transactions">
+                    <span class="bi bi-plus-square-fill mr-2" aria-hidden="true"></span> Transactions
+                </NavLink>
+            </div>
         </div>
         <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/add-transaction">
-                <span class="bi bi-plus-square-fill" aria-hidden="true"></span> Cash In
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/add-cash-out">
-                <span class="bi bi-list-check" aria-hidden="true"></span> Cash Out
-            </NavLink>
-        </div>
-        <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/add-debt">
-                <span class="bi bi-exclamation-triangle-fill" aria-hidden="true"></span> Add Debt
+            <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/add-debt">
+                <span class="bi bi-exclamation-triangle-fill mr-2" aria-hidden="true"></span> Add Debt
             </NavLink>
         </div>
           <div class="nav-item px-3">
-            <NavLink class="nav-link" href="/debt-payment">
-                <span class="bi bi-exclamation-triangle-fill" aria-hidden="true"></span> Pay Debt
+            <NavLink class="nav-link text-white hover:bg-blue-700 rounded-md" href="/debt-payment">
+                <span class="bi bi-exclamation-triangle-fill mr-2" aria-hidden="true"></span> Pay Debt
             </NavLink>
         </div>
-    
-    
+
     </nav>
 </div>
 
@@ -53,13 +53,11 @@
     .nav-scrollable {
         width: 250px;
         height: 100vh;
-        background-color: #343a40;
         position: fixed;
         top: 0;
         left: 0;
         display: flex;
         flex-direction: column;
-        color: #fff;
         padding-top: 1rem;
     }
 
@@ -68,20 +66,9 @@
         }
 
         .nav-scrollable .nav-link {
-            color: #ffffff;
             text-decoration: none;
             display: flex;
             align-items: center;
-        }
-
-            .nav-scrollable .nav-link:hover {
-                background-color: #495057;
-                border-radius: 5px;
-                padding: 0.5rem;
-            }
-
-        .nav-scrollable .bi {
-            margin-right: 0.5rem;
         }
 
     .top-row {
@@ -92,6 +79,4 @@
     #navbar-toggler:checked + .nav-scrollable {
         display: none;
     }
-
- 
 </style>

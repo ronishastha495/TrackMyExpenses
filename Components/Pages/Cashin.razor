@@ -1,0 +1,191 @@
+﻿@page "/cash-in"
+@using TrackMyExpenses.Model
+@using TrackMyExpenses.Services
+@inject NavigationManager Navigation
+@inject TransactionService TransactionService
+@inject UserServices UserServices
+
+<div class="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-200 via-purple-200 to-gray-100">
+    <div class="container bg-white p-8 rounded-lg shadow-lg max-w-4xl">
+        <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">Add CashIn</h3>
+
+        <EditForm Model="@transaction" OnValidSubmit="HandleSubmit" class="grid grid-cols-1 md:grid-cols-2 gap-6">
+            <DataAnnotationsValidator />
+            <ValidationSummary />
+
+            <!-- Amount -->
+            <div class="form-group">
+                <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
+                <div class="relative">
+                    <InputNumber id="amount" @bind-Value="transaction.Amount" class="input w-full" />
+                    <span class="absolute inset-y-0 right-4 flex items-center text-gray-500">@UserServices.GetPreferredCurrency()</span>
+                </div>
+            </div>
+
+            <!-- Transaction Date -->
+            <div class="form-group">
+                <label for="date" class="block text-sm font-medium text-gray-700">Transaction Date</label>
+                <input type="date" id="date" @bind="transaction.Date" class="input w-full" />
+            </div>
+
+            <!-- Description -->
+            <div class="form-group col-span-2">
+                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
+                <InputTextArea id="description" @bind-Value="transaction.Description" class="input w-full" rows="3" />
+            </div>
+
+            <!-- Category -->
+            <div class="form-group">
+                <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
+                <select id="category" @bind="transaction.Category" class="input w-full">
+                    <option value="credit">Credit</option>
+                </select>
+            </div>
+
+            <!-- Notes -->
+            <div class="form-group">
+                <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
+                <InputTextArea id="notes" @bind-Value="transaction.Notes" class="input w-full" rows="3" placeholder="Optional note about the transaction" />
+            </div>
+
+            <!-- Tags -->
+            <div class="form-group">
+                <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
+                <InputText id="tags" @bind-Value="tagsInput" class="input w-full" placeholder="Comma-separated tags" />
+            </div>
+
+            <!-- Existing Tags Dropdown -->
+            <div class="form-group">
+                <label for="existingTags" class="block text-sm font-medium text-gray-700">Select Existing Tags</label>
+                <select id="existingTags" @bind="selectedTag" class="input w-full">
+                    <option value="">-- Select Tag --</option>
+                    <option value="monthly">Monthly</option>
+                    <option value="rent">Rent</option>
+                    <option value="groceries">Groceries</option>
+                    <option value="salary">Salary</option>
+                </select>
+            </div>
+
+            <!-- Submit Button -->
+            <div class="form-group col-span-2 flex justify-center">
+                <button type="submit" class="submit-btn">Submit</button>
+            </div>
+        </EditForm>
+
+        @if (isMessageVisible)
+        {
+            <div class="modal">
+                <div class="modal-content">
+                    <h3>@messageTitle</h3>
+                    <p>@messageContent</p>
+                    <button @onclick="CloseMessageBox" class="close-btn">Close</button>
+                </div>
+            </div>
+        }
+    </div>
+</div>
+
+<style>
+    .input {
+    padding: 0.75rem;
+    border: 1px solid #e2e8f0;
+    border-radius: 6px;
+    font-size: 1rem;
+    outline: none;
+    transition: border-color 0.2s;
+    }
+
+    .input:focus {
+    border-color: #6a11cb;
+    box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
+    }
+
+    .submit-btn {
+    background: linear-gradient(135deg, #6a11cb, #2575fc);
+    color: white;
+    padding: 0.75rem 2rem;
+    border: none;
+    border-radius: 6px;
+    font-size: 1rem;
+    font-weight: 500;
+    cursor: pointer;
+    transition: background 0.3s;
+    }
+
+    .submit-btn:hover {
+    background: linear-gradient(135deg, #2575fc, #6a11cb);
+    }
+</style>
+
+@code {
+    private Transactions transaction = new Transactions
+        {
+            Date = DateTime.Today
+        };
+
+    private string tagsInput = string.Empty;
+    private string selectedTag = string.Empty;
+    private string messageTitle = string.Empty;
+    private string messageContent = string.Empty;
+    private bool isMessageVisible = false;
+
+    private void AddTagsToTransaction()
+    {
+        var newTags = tagsInput.Split(',')
+            .Select(tag => tag.Trim())
+            .Where(tag => !string.IsNullOrEmpty(tag))
+            .ToList();
+
+        if (!string.IsNullOrEmpty(selectedTag) && !transaction.Tags.Contains(selectedTag))
+        {
+            newTags.Add(selectedTag);
+        }
+
+        transaction.Tags = newTags.Distinct().ToList();
+    }
+
+    private async Task HandleSubmit()
+    {
+        try
+        {
+            var loggedInUser = UserServices.GetLoggedInUser();
+            if (loggedInUser == null)
+            {
+                throw new InvalidOperationException("User is not logged in.");
+            }
+
+            transaction.UserName = loggedInUser.UserName;
+
+            if (transaction.Category == null)
+            {
+                transaction.Category = transaction.Amount > 0 ? "credit" : "debit";
+            }
+
+            transaction.TransactionType = transaction.Category;
+            transaction.Id = Guid.NewGuid().ToString();
+            AddTagsToTransaction();
+
+            await TransactionService.AddTransactionAsync(transaction);
+
+            messageTitle = "Success!";
+            messageContent = "Transaction added successfully.";
+            isMessageVisible = true;
+
+            transaction = new Transactions { Date = DateTime.Today };
+            tagsInput = string.Empty;
+            selectedTag = string.Empty;
+        }
+        catch (Exception ex)
+        {
+            messageTitle = "Error!";
+            messageContent = ex.Message;
+            isMessageVisible = true;
+        }
+    }
+
+    private void CloseMessageBox()
+    {
+        isMessageVisible = false;
+        Navigation.NavigateTo("/dashboard");
+    }
+}

@@ -1,79 +1,86 @@
 ﻿@page "/add-cash-out"
-@using BudgetEase.Model
-@using BudgetEase.Services
-
+@using TrackMyExpenses.Model
+@using TrackMyExpenses.Services
+@inject NavigationManager Navigation
 @inject TransactionService TransactionService
 @inject UserServices UserServices
 
-<h3>Add Cash Out</h3>
+<h2 class="text-center text-3xl font-semibold text-indigo-700 mb-8">Add Cash Out</h2>
 
-<EditForm Model="@transaction" OnValidSubmit="HandleSubmit"
-          style="max-width: 600px; margin: 0 auto; background: #ffffff; padding: 20px; border-radius: 8px; box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.1);">
-    <DataAnnotationsValidator />
-    <ValidationSummary />
+<div class="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-200 via-purple-200 to-gray-100">
+    <EditForm Model="@transaction" OnValidSubmit="HandleSubmit"
+              style="max-width: 900px; width: 100%; background: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);">
+        <DataAnnotationsValidator />
+        <ValidationSummary />
 
-    <!-- Amount -->
-    <div style="margin-bottom: 16px;">
-        <label for="amount" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Amount</label>
-        <InputNumber id="amount" @bind-Value="transaction.Amount"
-                     style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
-    </div>
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
 
-    <!-- Transaction Date -->
-    <div style="margin-bottom: 16px;">
-        <label for="date" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Transaction Date</label>
-        <InputDate id="date" @bind-Value="transaction.Date"
-                   style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
-    </div>
+            <!-- Amount -->
+            <div class="flex flex-col">
+                <label for="amount" class="text-sm font-semibold text-gray-600 mb-2">Amount</label>
+                <InputNumber id="amount" @bind-Value="transaction.Amount"
+                             class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+                <span class="text-sm text-gray-500">@UserServices.GetPreferredCurrency()</span>
+            </div>
 
-    <!-- Description -->
-    <div style="margin-bottom: 16px;">
-        <label for="description" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Description</label>
-        <InputTextArea id="description" @bind-Value="transaction.Description" rows="3"
-                       style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
-    </div>
+            <!-- Transaction Date -->
+            <div class="flex flex-col">
+                <label for="date" class="text-sm font-semibold text-gray-600 mb-2">Transaction Date</label>
+                <InputDate id="date" @bind-Value="transaction.Date"
+                           class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
 
+            <!-- Description -->
+            <div class="flex flex-col col-span-2">
+                <label for="description" class="text-sm font-semibold text-gray-600 mb-2">Description</label>
+                <InputTextArea id="description" @bind-Value="transaction.Description" rows="3"
+                               class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
 
-    <!-- Category -->
-    <select id="category" @bind="transaction.Category"
-            style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;">
-        <option value="debit">Debit</option>
-        <!-- Add more categories as needed -->
-    </select>
+            <!-- Category -->
+            <div class="flex flex-col">
+                <label for="category" class="text-sm font-semibold text-gray-600 mb-2">Category</label>
+                <select id="category" @bind="transaction.Category"
+                        class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
+                    <option value="debit">Debit</option>
+                    <!-- Add more categories as needed -->
+                </select>
+            </div>
 
+            <!-- Notes -->
+            <div class="flex flex-col col-span-2">
+                <label for="notes" class="text-sm font-semibold text-gray-600 mb-2">Notes</label>
+                <InputTextArea id="notes" @bind-Value="transaction.Notes" rows="2"
+                               class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
 
-    <!-- Notes -->
-    <div style="margin-bottom: 16px;">
-        <label for="notes" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Notes</label>
-        <InputTextArea id="notes" @bind-Value="transaction.Notes" rows="2"
-                       style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
-    </div>
+            <!-- Tags -->
+            <div class="flex flex-col col-span-2">
+                <label for="tags" class="text-sm font-semibold text-gray-600 mb-2">Tags (Comma-Separated)</label>
+                <InputText id="tags" @bind-Value="tagsInput"
+                           class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
+            </div>
 
-    <!-- Tags -->
-    <div style="margin-bottom: 16px;">
-        <label for="tags" style="display: block; margin-bottom: 8px; font-size: 14px; font-weight: 600; color: #4a4a4a;">Tags (Comma-Separated)</label>
-        <InputText id="tags" @bind-Value="tagsInput"
-                   style="width: 100%; padding: 10px 12px; border: 1px solid #d1d5db; border-radius: 4px; box-shadow: 0 1px 2px rgba(0,0,0,0.05); outline: none; font-size: 14px;" />
-    </div>
-
-    <!-- Submit Button -->
-    <div style="text-align: center;">
-        <button type="submit"
-                style="padding: 10px 20px; background: #4f46e5; color: #ffffff; border: none; border-radius: 999px; font-size: 14px; cursor: pointer; transition: background 0.3s;">
-            Submit
-        </button>
-    </div>
-</EditForm>
+            <!-- Submit Button -->
+            <div class="col-span-2 text-center">
+                <button type="submit"
+                        class="w-full py-3 mt-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">
+                    Submit
+                </button>
+            </div>
+        </div>
+    </EditForm>
+</div>
 
 @if (isMessageVisible)
 {
-    <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-1/3 text-center">
-            <h3 class="text-xl font-bold">@messageTitle</h3>
-            <p>@messageContent</p>
-            <button class="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-full" @onclick="CloseMessageBox">Close</button>
+        <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
+            <div class="bg-white p-6 rounded shadow-lg w-1/3 text-center">
+                <h3 class="text-xl font-bold text-indigo-600">@messageTitle</h3>
+                <p class="text-sm text-gray-600">@messageContent</p>
+                <button class="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700" @onclick="CloseMessageBox">Close</button>
+            </div>
         </div>
-    </div>
 }
 
 @code {
@@ -94,7 +101,7 @@
         try
         {
             // Get logged-in user's details
-            var loggedInUser =  UserServices.GetLoggedInUser();
+            var loggedInUser = UserServices.GetLoggedInUser();
             if (loggedInUser == null)
             {
                 throw new InvalidOperationException("User is not logged in.");
@@ -143,7 +150,6 @@
     private void CloseMessageBox()
     {
         isMessageVisible = false;
+        Navigation.NavigateTo("/dashboard");
     }
 }
-
-

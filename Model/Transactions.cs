@@ -2,7 +2,7 @@
 {
     public Transactions()
     {
-        Tags = new List<string>(); // Initialize the Tags list
+        Tags = new List<string>(); 
     }
 
     public string Id { get; set; }
@@ -14,11 +14,6 @@
     public DateTime Date { get; set; }
     public string Notes { get; set; }
     public List<string> Tags { get; set; }
-    public bool IsDebt { get; set; }
-    public decimal? DebtAmount { get; set; }
-    public DateTime? DueDate { get; set; }
-    public bool IsPendingDebt { get; set; }
-    public decimal? AmountPaidToClearDebt { get; set; }
-    public decimal? BalanceRequired { get; set; }
+   
     public string TransactionType { get; set; }
 }

@@ -6,23 +6,45 @@ using System.Linq;
 using System.Text;
 using System.Threading.Tasks;
 using System.Text.Json;
-using BudgetEase.Model;
+using TrackMyExpenses.Model;
 
-namespace BudgetEase.Services
+namespace TrackMyExpenses.Services
 {
     public class UserServices
     {
-        private const string FilePath = @"C:\Users\asimk\OneDrive\Desktop\AD\BudgetEase\Data\users.json";  // Absolute path for users.json
-                                                                                                           //Added a static variable to hold the logged-in user Information
+        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\22085434_Ronisha Shrestha\LocalData\users.json"; 
+                                                                                                           
         private static User? _loggedInUser;
-        public  List<User> LoadUsers()
+        public List<User> LoadUsers()
         {
             if (!File.Exists(FilePath))
-                return new List<User>();  // Return an empty list if no users exist
+            {
+               
+                return new List<User>();  
+            }
 
             var json = File.ReadAllText(FilePath);
-            return JsonSerializer.Deserialize<List<User>>(json) ?? new List<User>();
+
+           
+            if (string.IsNullOrWhiteSpace(json))
+            {
+          
+                return new List<User>();
+            }
+
+            try
+            {
+                var users = JsonSerializer.Deserialize<List<User>>(json);
+                return users ?? new List<User>(); 
+            }
+            catch (JsonException ex)
+            {
+           
+                Console.WriteLine($"JSON deserialization failed: {ex.Message}");
+                return new List<User>(); 
+            }
         }
+
 
         public void  SaveUsers(List<User> users)
         {
@@ -30,7 +52,7 @@ namespace BudgetEase.Services
             var directory = Path.GetDirectoryName(FilePath);
             if (!Directory.Exists(directory))
             {
-                Directory.CreateDirectory(directory);  // Create directory if it doesn't exist
+                Directory.CreateDirectory(directory);  
             }
 
             // Serialize and save user data
@@ -59,6 +81,11 @@ namespace BudgetEase.Services
         {
             var hashedInputPassword = HashPassword(inputPassword);
             return hashedInputPassword == storedPassword;
+        }
+
+        public string GetPreferredCurrency()
+        {
+            return _loggedInUser?.PreferredCurrency ?? "USD"; 
         }
     }
 }

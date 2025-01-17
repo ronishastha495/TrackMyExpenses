@@ -4,19 +4,18 @@ using System.IO;
 using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
-using BudgetEase.Model;
+using TrackMyExpenses.Model;
 
-namespace BudgetEase.Services
+namespace TrackMyExpenses.Services
 {
     public class DebtService
     {
-        private const string FilePath = @"C:\Users\asimk\OneDrive\Desktop\AD\BudgetEase\Data\debts.json"; // Path to store debt data as JSON
+        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\22085434_Ronisha Shrestha\LocalData\debts.json"; // Path to store debt data as JSON
 
-        // Load the list of debts for a specific user from the JSON file asynchronously
         public async Task<List<Debt>> LoadDebtsAsync(string userName)
         {
             if (!File.Exists(FilePath))
-                return new List<Debt>();  // Return an empty list if no debts exist
+                return new List<Debt>(); 
 
             var json = await File.ReadAllTextAsync(FilePath);
             var allDebts = JsonSerializer.Deserialize<List<Debt>>(json) ?? new List<Debt>();
@@ -27,7 +26,7 @@ namespace BudgetEase.Services
             return userDebts;
         }
 
-        // Save the updated list of debts to the JSON file asynchronously
+   
         public async Task SaveDebtsAsync(List<Debt> debts)
         {
             var json = JsonSerializer.Serialize(debts, new JsonSerializerOptions { WriteIndented = true });
@@ -37,33 +36,33 @@ namespace BudgetEase.Services
         // Add a debt for a specific user
         public async Task AddDebtAsync(Debt debt)
         {
-            // Ensure Debt has all necessary properties, including Id
+          
             if (string.IsNullOrEmpty(debt.debtId))
             {
-                debt.debtId = Guid.NewGuid().ToString();  // Assign a unique ID if not already set
+                debt.debtId = Guid.NewGuid().ToString(); 
             }
 
             if (debt.Source == null)
-                debt.Source = "Unknown"; // Default source if not provided
+                debt.Source = "Unknown"; 
 
-            // Ensure UserName is provided and associated with the transaction
+    
             if (string.IsNullOrEmpty(debt.UserName))
             {
                 throw new ArgumentException("UserName must be provided for the transaction.");
             }
 
-            // Load the existing debts and add the new one
-            var debts = await LoadDebtsAsync(debt.UserName);  // Pass the userName of the debt to LoadDebtsAsync
+
+            var debts = await LoadDebtsAsync(debt.UserName);  
             debts.Add(debt);
 
-            // Save the updated list of debts
+         
             await SaveDebtsAsync(debts);
         }
 
-        // Method to calculate the total amount of debts for a specific user
+
         public async Task<decimal> GetTotalDebtsAsync(string userName)
         {
-            var debts = await LoadDebtsAsync(userName);  // Pass the userName to LoadDebtsAsync
+            var debts = await LoadDebtsAsync(userName); 
 
             // Sum the amounts of all debts
             decimal totalDebts = debts.Sum(d => d.Amount);
@@ -71,7 +70,6 @@ namespace BudgetEase.Services
             return totalDebts;
         }
 
-        // Example of filtering debts by due date range for a specific user
         public async Task<List<Debt>> FilterDebtsAsync(string userName, DateTime startDate, DateTime endDate)
         {
             var debts = await LoadDebtsAsync(userName);  // Pass the userName to LoadDebtsAsync
@@ -81,10 +79,10 @@ namespace BudgetEase.Services
             return filteredDebts;
         }
 
-        // Example of searching debts by source (title/description) for a specific user
+      
         public async Task<List<Debt>> SearchDebtsAsync(string userName, string searchQuery)
         {
-            var debts = await LoadDebtsAsync(userName);  // Pass the userName to LoadDebtsAsync
+            var debts = await LoadDebtsAsync(userName); 
 
             var filteredDebts = debts.Where(d => d.Source.Contains(searchQuery, StringComparison.OrdinalIgnoreCase)).ToList();
 
@@ -100,7 +98,7 @@ namespace BudgetEase.Services
             if (paymentAmount <= 0)
                 throw new ArgumentException("Payment amount must be greater than zero.", nameof(paymentAmount));
 
-            // Load debts (you should probably make this async if it's loading from a file or database)
+       
             var debts = await LoadDebtsAsync(userName);  // Await the LoadDebtsAsync method
             var debt = debts.FirstOrDefault(d => d.debtId == debtId);
             if (debt == null)
@@ -114,8 +112,8 @@ namespace BudgetEase.Services
             if (string.IsNullOrEmpty(debt.UserName))
                 throw new InvalidOperationException("Username associated with the debt is null or empty.");
             // Get the current available balance for the user
-            var transactionService = new TransactionService();  // Create an instance of TransactionService
-            var currentBalance = await transactionService.GetAvailableBalanceForUserAsync(userName);  // Call the method on the instance
+            var transactionService = new TransactionService();  
+            var currentBalance = await transactionService.GetTotalBalanceForUserAsync(userName);  // Call the method on the instance
             if (paymentAmount > currentBalance)
                 throw new InvalidOperationException("Insufficient balance to clear the debt.");
 
@@ -126,25 +124,13 @@ namespace BudgetEase.Services
             // Check if the debt is fully cleared
             if (debt.PaidAmount >= debt.Amount)
             {
-                debt.IsCleared = true;  // Mark the debt as cleared
-                debt.PaidAmount = debt.Amount;  // Ensure the paid amount does not exceed the debt amount
+                debt.IsCleared = true;  
+                debt.PaidAmount = debt.Amount;  
                 Console.WriteLine($"Debt {debtId} is fully cleared.");
             }
-            
-
-            // Record the transaction (you should use an appropriate method for this)
-            await transactionService.AddTransactionAsync(new Transactions
-            {
-                UserName = debt.UserName,
-                Amount = paymentAmount,
-                TransactionType = "debt",
-                Notes = $"Payment for debt {debt.Source}",
-                
-
-            });
-
-            // Save the updated debts list (this should save the data back to your storage)
-            await SaveDebtsAsync(debts);  // Use the async SaveDebtsAsync method
+        
+        
+            await SaveDebtsAsync(debts); 
 
             return true;  // Indicate that the payment was successful
         }
@@ -154,11 +140,22 @@ namespace BudgetEase.Services
             var debts = await LoadDebtsAsync(userName);  // Load the user's debts
 
             // Calculate the total cleared and remaining debts
-            decimal clearedDebt = debts.Where(d => d.IsCleared).Sum(d => d.Amount);  // Sum of cleared debts
-            decimal remainingDebt = debts.Where(d => !d.IsCleared).Sum(d => d.Amount);  // Sum of remaining debts
+            decimal clearedDebt = debts.Where(d => d.IsCleared).Sum(d => d.Amount);  
+            decimal remainingDebt = debts.Where(d => !d.IsCleared).Sum(d => d.Amount); 
 
-            return (clearedDebt, remainingDebt);  // Return both cleared and remaining debts as a tuple
+            return (clearedDebt, remainingDebt); 
         }
+
+        public async Task<List<Debt>> GetPendingDebtsAsync(string userName)
+        {
+            var debts = await LoadDebtsAsync(userName);  // Load all debts for the user
+
+          
+            var pendingDebts = debts.Where(d => !d.IsCleared).ToList();
+
+            return pendingDebts;
+        }
+
 
 
     }

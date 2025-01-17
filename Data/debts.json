@@ -1,35 +1,3 @@
 [
-  {
-    "debtId": "3eccc07c-58d2-4236-881b-ceca38cbfc42",
-    "UserName": "test2",
-    "Source": "car loan",
-    "Amount": 750,
-    "PaidAmount": 0,
-    "DueDate": "2025-01-18T00:00:00",
-    "Notes": "no interest ",
-    "Tags": "car loan",
-    "IsCleared": false
-  },
-  {
-    "debtId": "3eccc07c-58d2-4236-881b-ceca38cbfc42",
-    "UserName": "test2",
-    "Source": "car loan",
-    "Amount": 750,
-    "PaidAmount": 0,
-    "DueDate": "2025-01-18T00:00:00",
-    "Notes": "no interest ",
-    "Tags": "car loan",
-    "IsCleared": false
-  },
-  {
-    "debtId": "e9e23704-8812-4879-a9cb-463ec95f4061",
-    "UserName": "test2",
-    "Source": "house loan",
-    "Amount": 500,
-    "PaidAmount": 500,
-    "DueDate": "2025-01-05T00:00:00+05:45",
-    "Notes": "house loan",
-    "Tags": "loan house",
-    "IsCleared": true
-  }
+  
 ]

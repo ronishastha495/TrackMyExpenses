@@ -3,12 +3,30 @@
 <head>
     <meta charset="utf-8" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no, viewport-fit=cover" />
-    <title>BudgetEase</title>
+    <title>TrackMyExpenses</title>
     <base href="/" />
     <link rel="stylesheet" href="css/bootstrap/bootstrap.min.css" />
     <link rel="stylesheet" href="css/app.css" />
-    <link rel="stylesheet" href="BudgetEase.styles.css" />
+    <link rel="stylesheet" href="TrackMyExpenses.styles.css" />
     <link rel="icon" href="data:,">
+
+    <link href="https://cdn.jsdelivr.net/npm/tailwindcss@2.2.16/dist/tailwind.min.css" rel="stylesheet">
+
+
+    <script>
+        function downloadFile(fileName, base64Data) {
+            const link = document.createElement("a");
+            link.download = fileName;
+            link.href = "data:text/csv;base64," + base64Data;
+            document.body.appendChild(link);
+            link.click();
+            document.body.removeChild(link);
+        }
+    </script>
+
+
+
+
 </head>
 
 <body>
