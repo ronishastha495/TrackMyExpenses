@@ -1,126 +1,101 @@
 ﻿@page "/cash-in"
 @using TrackMyExpenses.Model
 @using TrackMyExpenses.Services
-@inject NavigationManager Navigation
+
 @inject TransactionService TransactionService
 @inject UserServices UserServices
 
-<div class="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-200 via-purple-200 to-gray-100">
-    <div class="container bg-white p-8 rounded-lg shadow-lg max-w-4xl">
-        <h3 class="text-2xl font-bold text-center text-gray-800 mb-6">Add CashIn</h3>
+<div class="container my-5">
+    <div class="card shadow-lg" style="background: linear-gradient(135deg, #4a90e2, #9b59b6); border: none; border-radius: 15px; overflow: hidden;">
+        <div class="card-header text-center text-white" style="background: rgba(0, 0, 0, 0.1);">
+            <h3 class="fw-bold">Add Transaction</h3>
+        </div>
+        <div class="card-body bg-white">
+            <EditForm Model="@transaction" OnValidSubmit="HandleSubmit" class="transaction-form">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
 
-        <EditForm Model="@transaction" OnValidSubmit="HandleSubmit" class="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
-
-            <!-- Amount -->
-            <div class="form-group">
-                <label for="amount" class="block text-sm font-medium text-gray-700">Amount</label>
-                <div class="relative">
-                    <InputNumber id="amount" @bind-Value="transaction.Amount" class="input w-full" />
-                    <span class="absolute inset-y-0 right-4 flex items-center text-gray-500">@UserServices.GetPreferredCurrency()</span>
+                <!-- Amount -->
+                <div class="mb-3">
+                    <label for="amount" class="form-label text-secondary fw-bold">Amount</label>
+                    <InputNumber id="amount" @bind-Value="transaction.Amount" class="form-control" />
+                    <small class="text-muted">@UserServices.GetPreferredCurrency()</small>
                 </div>
-            </div>
 
-            <!-- Transaction Date -->
-            <div class="form-group">
-                <label for="date" class="block text-sm font-medium text-gray-700">Transaction Date</label>
-                <input type="date" id="date" @bind="transaction.Date" class="input w-full" />
-            </div>
-
-            <!-- Description -->
-            <div class="form-group col-span-2">
-                <label for="description" class="block text-sm font-medium text-gray-700">Description</label>
-                <InputTextArea id="description" @bind-Value="transaction.Description" class="input w-full" rows="3" />
-            </div>
-
-            <!-- Category -->
-            <div class="form-group">
-                <label for="category" class="block text-sm font-medium text-gray-700">Category</label>
-                <select id="category" @bind="transaction.Category" class="input w-full">
-                    <option value="credit">Credit</option>
-                </select>
-            </div>
-
-            <!-- Notes -->
-            <div class="form-group">
-                <label for="notes" class="block text-sm font-medium text-gray-700">Notes</label>
-                <InputTextArea id="notes" @bind-Value="transaction.Notes" class="input w-full" rows="3" placeholder="Optional note about the transaction" />
-            </div>
-
-            <!-- Tags -->
-            <div class="form-group">
-                <label for="tags" class="block text-sm font-medium text-gray-700">Tags</label>
-                <InputText id="tags" @bind-Value="tagsInput" class="input w-full" placeholder="Comma-separated tags" />
-            </div>
-
-            <!-- Existing Tags Dropdown -->
-            <div class="form-group">
-                <label for="existingTags" class="block text-sm font-medium text-gray-700">Select Existing Tags</label>
-                <select id="existingTags" @bind="selectedTag" class="input w-full">
-                    <option value="">-- Select Tag --</option>
-                    <option value="monthly">Monthly</option>
-                    <option value="rent">Rent</option>
-                    <option value="groceries">Groceries</option>
-                    <option value="salary">Salary</option>
-                </select>
-            </div>
-
-            <!-- Submit Button -->
-            <div class="form-group col-span-2 flex justify-center">
-                <button type="submit" class="submit-btn">Submit</button>
-            </div>
-        </EditForm>
-
-        @if (isMessageVisible)
-        {
-            <div class="modal">
-                <div class="modal-content">
-                    <h3>@messageTitle</h3>
-                    <p>@messageContent</p>
-                    <button @onclick="CloseMessageBox" class="close-btn">Close</button>
+                <!-- Transaction Date -->
+                <div class="mb-3">
+                    <label for="date" class="form-label text-secondary fw-bold">Transaction Date</label>
+                    <input type="date" id="date" @bind="transaction.Date" class="form-control" />
                 </div>
-            </div>
-        }
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label for="description" class="form-label text-secondary fw-bold">Description</label>
+                    <InputTextArea id="description" @bind-Value="transaction.Description" rows="3" class="form-control" />
+                </div>
+
+                <!-- Category -->
+                <div class="mb-3">
+                    <label for="category" class="form-label text-secondary fw-bold">Category</label>
+                    <select id="category" @bind="transaction.Category" class="form-select">
+                        <option value="credit">Credit</option>
+                    </select>
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-3">
+                    <label for="notes" class="form-label text-secondary fw-bold">Notes</label>
+                    <InputTextArea id="notes" @bind-Value="transaction.Notes" rows="3" class="form-control" placeholder="Optional note about the transaction" />
+                </div>
+
+                <!-- Tags -->
+                <div class="mb-3">
+                    <label for="tags" class="form-label text-secondary fw-bold">Tags</label>
+                    <InputText id="tags" @bind-Value="tagsInput" class="form-control" placeholder="Comma-separated tags" />
+                </div>
+
+                <!-- Existing Tags Dropdown -->
+                <div class="mb-3">
+                    <label for="existingTags" class="form-label text-secondary fw-bold">Select Existing Tags</label>
+                    <select id="existingTags" @bind="selectedTag" class="form-select">
+                        <option value="">-- Select Tag --</option>
+                        <option value="monthly">Monthly</option>
+                        <option value="rent">Rent</option>
+                        <option value="groceries">Groceries</option>
+                        <option value="salary">Salary</option>
+                    </select>
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-gradient text-white fw-bold px-4 py-2" style="background: linear-gradient(135deg, #4a90e2, #9b59b6); border: none; border-radius: 25px;">
+                        Submit
+                    </button>
+                </div>
+            </EditForm>
+        </div>
     </div>
 </div>
 
-<style>
-    .input {
-        padding: 0.75rem;
-        border: 1px solid #e2e8f0;
-        border-radius: 6px;
-        font-size: 1rem;
-        outline: none;
-        transition: border-color 0.2s;
-    }
-
-        .input:focus {
-            border-color: #6a11cb;
-            box-shadow: 0 0 0 2px rgba(106, 17, 203, 0.2);
-        }
-
-    .submit-btn {
-        background: linear-gradient(135deg, #6a11cb, #2575fc);
-        color: white;
-        padding: 0.75rem 2rem;
-        border: none;
-        border-radius: 6px;
-        font-size: 1rem;
-        font-weight: 500;
-        cursor: pointer;
-        transition: background 0.3s;
-    }
-
-        .submit-btn:hover {
-            background: linear-gradient(135deg, #2575fc, #6a11cb);
-        }
-</style>
+@if (isMessageVisible)
+{
+    <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0, 0, 0, 0.5); z-index: 1050;">
+        <div class="card shadow-lg" style="max-width: 500px; width: 90%; border: none; border-radius: 15px;">
+            <div class="card-body text-center">
+                <h4 class="text-primary fw-bold">@messageTitle</h4>
+                <p class="text-muted">@messageContent</p>
+                <button @onclick="CloseMessageBox" class="btn btn-gradient text-white fw-bold px-4 py-2" style="background: linear-gradient(135deg, #4a90e2, #9b59b6); border: none; border-radius: 25px;">
+                    Close
+                </button>
+            </div>
+        </div>
+    </div>
+}
 
 @code {
     private Transactions transaction = new Transactions
         {
-            Date = DateTime.Today
+            Date = DateTime.Today // Correctly initialize Date here
         };
 
     private string tagsInput = string.Empty;
@@ -129,6 +104,7 @@
     private string messageContent = string.Empty;
     private bool isMessageVisible = false;
 
+    // Add tags to the transaction
     private void AddTagsToTransaction()
     {
         var newTags = tagsInput.Split(',')
@@ -144,6 +120,7 @@
         transaction.Tags = newTags.Distinct().ToList();
     }
 
+    // Handle form submission
     private async Task HandleSubmit()
     {
         try
@@ -171,7 +148,7 @@
             messageContent = "Transaction added successfully.";
             isMessageVisible = true;
 
-            transaction = new Transactions { Date = DateTime.Today };
+            transaction = new Transactions();
             tagsInput = string.Empty;
             selectedTag = string.Empty;
         }
@@ -186,6 +163,6 @@
     private void CloseMessageBox()
     {
         isMessageVisible = false;
-        Navigation.NavigateTo("/dashboard");
+      
     }
 }

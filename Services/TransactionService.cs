@@ -8,7 +8,7 @@ namespace TrackMyExpenses.Services
 {
     public class TransactionService
     {
-        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\TrackMyExpenses\LocalDB\transactions.json";
+        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\22085434_Ronisha Shrestha\TrackMyExpenses\LocalDB\transactions.json";
 
         // Load transactions from the JSON file
         public async Task<List<Transactions>> LoadTransactionsAsync()
@@ -90,9 +90,19 @@ namespace TrackMyExpenses.Services
         public async Task<decimal> GetTotalInflowsForUserAsync(string userName)
         {
             var transactions = await LoadTransactionsAsync();
-            return transactions
+
+            // Get total credit transactions
+            var totalCredits = transactions
                 .Where(t => t.UserName == userName && t.Category == "credit")
                 .Sum(t => t.Amount);
+
+            // Get total debt payments
+            var debtService = new DebtService();
+            var userDebts = await debtService.LoadDebtsAsync(userName);
+            var totalDebtPayments = userDebts.Sum(d => d.PaidAmount);
+
+            // Subtract debt payments from total credits
+            return totalCredits - totalDebtPayments;
         }
 
 
@@ -103,6 +113,7 @@ namespace TrackMyExpenses.Services
                 .Where(t => t.UserName == userName && t.Category == "debit")
                 .Sum(t => Math.Abs(t.Amount));
         }
+
         // Get the highest inflow transaction for a specific user
         public async Task<Transactions?> GetHighestInflowForUserAsync(string userName)
         {
@@ -143,7 +154,62 @@ namespace TrackMyExpenses.Services
                 .FirstOrDefault();
         }
 
+        public async Task AddCashOutAsync(Transactions transaction)
+        {
+            if (transaction == null)
+            {
+                throw new ArgumentNullException(nameof(transaction), "Transaction cannot be null.");
+            }
 
+            // Validate user name
+            if (string.IsNullOrWhiteSpace(transaction.UserName))
+            {
+                throw new ArgumentException("UserName must be provided for the transaction.");
+            }
+
+            // Validate transaction category
+            if (string.IsNullOrEmpty(transaction.Category))
+            {
+                transaction.Category = "debit"; // Assuming this is a debit (cash out) transaction
+            }
+
+            // Validate transaction amount
+            if (transaction.Amount <= 0)
+            {
+                throw new InvalidOperationException("Transaction amount must be greater than zero.");
+            }
+
+            // Check if the user has sufficient balance for the cash out (debit)
+            decimal availableBalance = await GetAvailableBalanceForUserAsync(transaction.UserName);
+            if (availableBalance < Math.Abs(transaction.Amount))
+            {
+                throw new InvalidOperationException("Insufficient balance for this transaction.");
+            }
+
+            // Retrieve existing transactions
+            var transactions = await LoadTransactionsAsync();
+
+            // Check for duplicate transaction (optional)
+            bool isDuplicate = transactions.Any(t =>
+                t.UserName == transaction.UserName &&
+                t.Date == transaction.Date &&
+                t.Amount == transaction.Amount &&
+                t.Category == transaction.Category &&
+                t.Description == transaction.Description);
+
+            if (isDuplicate)
+            {
+                throw new InvalidOperationException("Duplicate transaction detected.");
+            }
+
+            // Add the transaction to the list
+            transactions.Add(transaction);
+
+            // Save the updated transactions
+            await SaveTransactionsAsync(transactions);
+
+
+        }
 
         // Get available balance for a specific user
         public async Task<decimal> GetAvailableBalanceForUserAsync(string userName)

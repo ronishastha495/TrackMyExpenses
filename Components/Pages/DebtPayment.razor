@@ -5,74 +5,68 @@
 @inject TransactionService TransactionService
 @inject UserServices UserServices
 
-<div class="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-200 via-purple-200 to-gray-100">
-    <div class="container mx-auto p-6 bg-white shadow-lg rounded-lg">
-        <h3 class="text-2xl font-bold text-center text-gradient bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent mb-6">Debt Payment</h3>
+<h3>Debt Payment</h3>
 
-        <!-- Display Debt List -->
-        @if (debts == null || !debts.Any())
-        {
-            <div class="text-center text-gray-600 py-4">
-                No debts are available at the moment.
-            </div>
-        }
-        else
-        {
-            <table class="table-auto w-full border-collapse border border-gray-300 shadow-md rounded-md">
-                <thead>
-                    <tr class="bg-gradient-to-r from-blue-400 via-purple-400 to-indigo-400 text-white">
-                        <th class="px-4 py-2">Debt Source</th>
-                        <th class="px-4 py-2">Amount</th>
-                        <th class="px-4 py-2">Due Date</th>
-                        <th class="px-4 py-2">Status</th>
-                        <th class="px-4 py-2">Action</th>
-                    </tr>
-                </thead>
-                <tbody class="bg-gray-50">
-                    @foreach (var debt in debts)
-                    {
-                        <tr class="hover:bg-purple-100">
-                            <td class="border px-4 py-2">@debt.Source</td>
-                            <td class="border px-4 py-2">@debt.Amount</td>
-                            <td class="border px-4 py-2">@debt.DueDate.ToShortDateString()</td>
-                            <td class="border px-4 py-2">@(debt.IsCleared ? "Cleared" : "Clear Now")</td>
-                            <td class="border px-4 py-2 text-center">
-                                <button class="bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-500 text-white font-semibold py-2 px-4 rounded-lg hover:shadow-md" @onclick="() => SelectDebt(debt)">Make Payment</button>
-                            </td>
-                        </tr>
-                    }
-                </tbody>
-            </table>
-        }
-
-        @if (selectedDebt != null)
-        {
-            <div class="mt-6 p-4 bg-gray-100 shadow-md rounded-lg">
-                <h4 class="text-lg font-semibold text-gradient bg-gradient-to-r from-blue-500 via-purple-500 to-indigo-600 bg-clip-text text-transparent">Make Payment for @selectedDebt.Source</h4>
-                <div class="mt-4">
-                    <label for="paymentAmount" class="block text-gray-700 font-medium">Payment Amount</label>
-                    <input type="number" class="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring-2 focus:ring-purple-400 focus:outline-none" id="paymentAmount" @bind="paymentAmount" min="1" />
-                    <span class="text-sm text-gray-600">@UserServices.GetPreferredCurrency()</span> <!-- Display preferred currency here -->
-                </div>
-                <button class="mt-4 bg-gradient-to-r from-purple-500 via-indigo-500 to-blue-500 text-white font-semibold py-2 px-4 rounded-lg hover:shadow-md" @onclick="MakePayment">Submit Debt Payment</button>
-
-                @if (!string.IsNullOrEmpty(paymentStatus))
-                {
-                    <div class="mt-4 p-4 text-green-800 bg-green-100 border border-green-200 rounded-lg">
-                        @paymentStatus
-                    </div>
-                }
-
-                @if (!string.IsNullOrEmpty(errorMessage))
-                {
-                    <div class="mt-4 p-4 text-red-800 bg-red-100 border border-red-200 rounded-lg">
-                        @errorMessage
-                    </div>
-                }
-            </div>
-        }
+<!-- Display Debt List -->
+@if (debts == null || !debts.Any())
+{
+    <div class="alert alert-info">
+        No debts are available at the moment.
     </div>
-</div>
+}
+else
+{
+    <table class="table table-striped">
+        <thead>
+            <tr>
+                <th scope="col">Debt Source</th>
+                <th scope="col">Amount</th>
+                <th scope="col">Due Date</th>
+                <th scope="col">Status</th>
+                <th scope="col">Action</th>
+            </tr>
+        </thead>
+        <tbody>
+            @foreach (var debt in debts)
+            {
+                <tr>
+                    <td>@debt.Source</td>
+                    <td>@debt.Amount</td>
+                    <td>@debt.DueDate.ToShortDateString()</td>
+                    <td>@(debt.IsCleared ? "Cleared" : "Outstanding")</td>
+                    <td>
+                        <button class="btn btn-primary" @onclick="() => SelectDebt(debt)">Make Payment</button>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+}
+
+@if (selectedDebt != null)
+{
+    <h4>Make Payment for @selectedDebt.Source</h4>
+    <div class="mb-3">
+        <label for="paymentAmount" class="form-label">Payment Amount</label>
+        <input type="number" class="form-control" id="paymentAmount" @bind="paymentAmount" min="1" />
+        <span style="font-size: 14px; color: #4a4a4a;">@UserServices.GetPreferredCurrency()</span> <!-- Display preferred currency here -->
+    </div>
+    <button class="btn btn-success" @onclick="MakePayment">Submit Payment</button>
+
+    @if (!string.IsNullOrEmpty(paymentStatus))
+    {
+        <div class="alert alert-info mt-3" role="alert">
+            @paymentStatus
+        </div>
+    }
+
+    @if (!string.IsNullOrEmpty(errorMessage))
+    {
+        <div class="alert alert-danger mt-3" role="alert">
+            @errorMessage
+        </div>
+    }
+}
 
 @code {
     private decimal TotalInflows { get; set; } = 0;
@@ -84,9 +78,9 @@
     private List<Debt> debts = new List<Debt>();
     private Debt selectedDebt;
     private decimal paymentAmount;
+    private decimal availableCash;
     private string paymentStatus;
     private string errorMessage;
-    private decimal availableCash;
 
     protected override async Task OnInitializedAsync()
     {
@@ -100,15 +94,17 @@
             }
 
             userName = loggedInUser.UserName;
+
             availableCash = await TransactionService.GetTotalBalanceForUserAsync(userName);
+
             List<Debt> modelDebts = await DebtService.LoadDebtsAsync(userName);
             debts = modelDebts.Select(d => new Debt
                 {
+                    debtId = d.debtId,
                     Source = d.Source,
                     Amount = d.Amount,
                     DueDate = d.DueDate,
-                    IsCleared = d.IsCleared,
-                    debtId = d.debtId
+                    IsCleared = d.IsCleared
                 }).ToList();
         }
         catch (Exception ex)
@@ -125,33 +121,47 @@
 
     private async Task MakePayment()
     {
+        // Clear previous messages
+        errorMessage = null;
+
+        if (selectedDebt == null || paymentAmount <= 0)
+        {
+            errorMessage = "Please select a debt and enter a valid payment amount.";
+            return;
+        }
+
+        if (paymentAmount > availableCash)
+        {
+            errorMessage = "Insufficient funds.";
+            return;
+        }
+
         try
         {
             bool paymentSuccess = await DebtService.DebtPaymentAsync(userName, selectedDebt.debtId, paymentAmount, availableCash);
 
             if (paymentSuccess)
             {
-                selectedDebt.Amount -= paymentAmount;
-                availableCash -= paymentAmount;
+                // Refresh available cash and debts list
+                availableCash = await TransactionService.GetTotalInflowsForUserAsync(userName);
+                debts = await DebtService.LoadDebtsAsync(userName);
 
-                if (selectedDebt.Amount <= 0)
-                {
-                    selectedDebt.IsCleared = true;
-                }
+                // Reset selected debt and payment amount after a brief delay
+                await Task.Delay(2000);
+                selectedDebt = null;
+                paymentAmount = 0;
 
-                paymentStatus = "Payment successful!";
-                errorMessage = string.Empty;
+                // Re-render after state update
+                StateHasChanged();
             }
             else
             {
-                paymentStatus = string.Empty;
-                errorMessage = "Payment failed. Insufficient funds or error.";
+                errorMessage = "Payment failed. Please try again.";
             }
         }
         catch (Exception ex)
         {
-            paymentStatus = string.Empty;
-            errorMessage = $"Error: {ex.Message}";
+            errorMessage = $"Debt Transactions: {ex.Message}";
         }
     }
 }

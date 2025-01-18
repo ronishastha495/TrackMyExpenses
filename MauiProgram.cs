@@ -1,6 +1,7 @@
 ﻿using Microsoft.Extensions.Logging;
 using TrackMyExpenses.Services;
 using Microsoft.JSInterop;
+using Blazored.Modal;
 // Added for Authentication
 
 namespace TrackMyExpenses
@@ -20,20 +21,18 @@ namespace TrackMyExpenses
             builder.Services.AddMauiBlazorWebView();
 
             // Registering AuthService
-            
 
 
-
+            builder.Services.AddBlazoredModal();
             builder.Services.AddSingleton<UserServices>();
-            builder.Services.AddSingleton<CashInflowService>();
             builder.Services.AddSingleton<TransactionService>();
             builder.Services.AddSingleton<DebtService>();
+            builder.Services.AddScoped<CurrencyService>();
 
 #if DEBUG
             builder.Services.AddBlazorWebViewDeveloperTools();
             builder.Logging.AddDebug();
 #endif
-
             return builder.Build();
         }
     }

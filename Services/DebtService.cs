@@ -5,12 +5,13 @@ using System.Linq;
 using System.Text.Json;
 using System.Threading.Tasks;
 using TrackMyExpenses.Model;
+using TrackMyExpenses.Services;
 
 namespace TrackMyExpenses.Services
 {
     public class DebtService
     {
-        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\TrackMyExpenses\LocalDB\debts.json"; // Path to store debt data as JSON
+        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\22085434_Ronisha Shrestha\TrackMyExpenses\LocalDB\debts.json"; // Path to store debt data as JSON
 
         public async Task<List<Debt>> LoadDebtsAsync(string userName)
         {
@@ -104,21 +105,19 @@ namespace TrackMyExpenses.Services
             if (debt == null)
                 throw new InvalidOperationException("Debt not found.");
 
-            // Check if the debt is already cleared
             if (debt.IsCleared)
                 throw new InvalidOperationException("This debt is already cleared.");
 
-            // Ensure the debt has a valid associated userName
             if (string.IsNullOrEmpty(debt.UserName))
                 throw new InvalidOperationException("Username associated with the debt is null or empty.");
             // Get the current available balance for the user
             var transactionService = new TransactionService();
-            var currentBalance = await transactionService.GetTotalBalanceForUserAsync(userName);  // Call the method on the instance
+            var currentBalance = await transactionService.GetTotalInflowsForUserAsync(userName);
             if (paymentAmount > currentBalance)
                 throw new InvalidOperationException("Insufficient balance to clear the debt.");
 
 
-            // Apply the payment to the debt
+
             debt.PaidAmount += paymentAmount;
 
             // Check if the debt is fully cleared
@@ -132,7 +131,7 @@ namespace TrackMyExpenses.Services
 
             await SaveDebtsAsync(debts);
 
-            return true;  // Indicate that the payment was successful
+            return true;
         }
         // Method to get the total cleared and remaining debts for a specific user
         public async Task<(decimal clearedDebt, decimal remainingDebt)> GetDebtSummaryAsync(string userName)

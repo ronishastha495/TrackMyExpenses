@@ -1,101 +1,101 @@
-﻿@page "/add-cash-out"
-@using System.Transactions
+﻿@page "/cash-out"
 @using TrackMyExpenses.Model
 @using TrackMyExpenses.Services
-@inject NavigationManager Navigation
+
 @inject TransactionService TransactionService
 @inject UserServices UserServices
 
-<h2 class="text-center text-3xl font-semibold text-indigo-700 mb-8">Add Cash Out</h2>
-
-<div class="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-200 via-purple-200 to-gray-100">
-    <EditForm Model="@transaction" OnValidSubmit="HandleSubmit"
-    style="max-width: 900px; width: 100%; background: #ffffff; padding: 40px; border-radius: 8px; box-shadow: 0px 4px 12px rgba(0, 0, 0, 0.1);">
-        <DataAnnotationsValidator />
-        <ValidationSummary />
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-8">
-
-            <!-- Amount -->
-            <div class="flex flex-col">
-                <label for="amount" class="text-sm font-semibold text-gray-600 mb-2">Amount</label>
-                <InputNumber id="amount" @bind-Value="transaction.Amount"
-                class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-                <span class="text-sm text-gray-500">@UserServices.GetPreferredCurrency()</span>
-            </div>
-
-            <!-- Transaction Date -->
-            <div class="flex flex-col">
-                <label for="date" class="text-sm font-semibold text-gray-600 mb-2">Transaction Date</label>
-                <InputDate id="date" @bind-Value="transaction.Date"
-                class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
-
-            <!-- Description -->
-            <div class="flex flex-col col-span-2">
-                <label for="description" class="text-sm font-semibold text-gray-600 mb-2">Description</label>
-                <InputTextArea id="description" @bind-Value="transaction.Description" rows="3"
-                class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
-
-            <!-- Category -->
-            <div class="flex flex-col">
-                <label for="category" class="text-sm font-semibold text-gray-600 mb-2">Category</label>
-                <select id="category" @bind="transaction.Category"
-                class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500">
-                    <option value="debit">Debit</option>
-                    <!-- Add more categories as needed -->
-                </select>
-            </div>
-
-            <!-- Notes -->
-            <div class="flex flex-col col-span-2">
-                <label for="notes" class="text-sm font-semibold text-gray-600 mb-2">Notes</label>
-                <InputTextArea id="notes" @bind-Value="transaction.Notes" rows="2"
-                class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
-
-            <!-- Tags -->
-            <div class="flex flex-col col-span-2">
-                <label for="tags" class="text-sm font-semibold text-gray-600 mb-2">Tags (Comma-Separated)</label>
-                <InputText id="tags" @bind-Value="tagsInput"
-                class="p-3 border-2 border-gray-300 rounded-md shadow-sm focus:outline-none focus:ring-2 focus:ring-indigo-500" />
-            </div>
-
-            <!-- Submit Button -->
-            <div class="col-span-2 text-center">
-                <button type="submit"
-                class="w-full py-3 mt-4 bg-indigo-600 text-white rounded-md hover:bg-indigo-700 transition duration-200">
-                    Submit
-                </button>
-            </div>
+<div class="container my-5">
+    <div class="card shadow-lg" style="background: linear-gradient(135deg, #f39c12, #e74c3c); border: none; border-radius: 15px; overflow: hidden;">
+        <div class="card-header text-center text-white" style="background: rgba(0, 0, 0, 0.1);">
+            <h3 class="fw-bold">Add Cash Out</h3>
         </div>
-    </EditForm>
+        <div class="card-body bg-white">
+            <EditForm Model="@transaction" OnValidSubmit="HandleSubmit">
+                <DataAnnotationsValidator />
+                <ValidationSummary />
+
+                <!-- Amount -->
+                <div class="mb-3">
+                    <label for="amount" class="form-label text-secondary fw-bold">Amount</label>
+                    <InputNumber id="amount" @bind-Value="transaction.Amount" class="form-control" />
+                    <small class="text-muted">@UserServices.GetPreferredCurrency()</small>
+                </div>
+
+                <!-- Transaction Date -->
+                <div class="mb-3">
+                    <label for="date" class="form-label text-secondary fw-bold">Transaction Date</label>
+                    <input type="date" id="date" @bind="transaction.Date" class="form-control" />
+                </div>
+
+                <!-- Description -->
+                <div class="mb-3">
+                    <label for="description" class="form-label text-secondary fw-bold">Description</label>
+                    <InputTextArea id="description" @bind-Value="transaction.Description" rows="3" class="form-control" />
+                </div>
+
+                <!-- Category -->
+                <div class="mb-3">
+                    <label for="category" class="form-label text-secondary fw-bold">Category</label>
+                    <select id="category" @bind="transaction.Category" class="form-select">
+                        <option value="debit">Debit</option>
+                    </select>
+                </div>
+
+                <!-- Notes -->
+                <div class="mb-3">
+                    <label for="notes" class="form-label text-secondary fw-bold">Notes</label>
+                    <InputTextArea id="notes" @bind-Value="transaction.Notes" rows="3" class="form-control" placeholder="Optional note about the transaction" />
+                </div>
+
+                <!-- Tags -->
+                <div class="mb-3">
+                    <label for="tags" class="form-label text-secondary fw-bold">Tags</label>
+                    <InputText id="tags" @bind-Value="tagsInput" class="form-control" placeholder="Comma-separated tags" />
+                </div>
+
+                <!-- Submit Button -->
+                <div class="text-center">
+                    <button type="submit" class="btn btn-gradient text-white fw-bold px-4 py-2" style="background: linear-gradient(135deg, #f39c12, #e74c3c); border: none; border-radius: 25px;">
+                        Submit
+                    </button>
+                </div>
+            </EditForm>
+        </div>
+    </div>
 </div>
 
 @if (isMessageVisible)
 {
-    <div class="fixed top-0 left-0 w-full h-full bg-black bg-opacity-50 flex justify-center items-center z-50">
-        <div class="bg-white p-6 rounded shadow-lg w-1/3 text-center">
-            <h3 class="text-xl font-bold text-indigo-600">@messageTitle</h3>
-            <p class="text-sm text-gray-600">@messageContent</p>
-            <button class="mt-4 px-6 py-2 bg-indigo-600 text-white rounded-full hover:bg-indigo-700" @onclick="CloseMessageBox">Close</button>
+    <div class="position-fixed top-0 start-0 w-100 h-100 d-flex justify-content-center align-items-center" style="background-color: rgba(0, 0, 0, 0.5); z-index: 1050;">
+        <div class="card shadow-lg" style="max-width: 500px; width: 90%; border: none; border-radius: 15px;">
+            <div class="card-body text-center">
+                <h4 class="text-warning fw-bold">@messageTitle</h4>
+                <p class="text-muted">@messageContent</p>
+                <button @onclick="CloseMessageBox" class="btn btn-gradient text-white fw-bold px-4 py-2" style="background: linear-gradient(135deg, #f39c12, #e74c3c); border: none; border-radius: 25px;">
+                    Close
+                </button>
+            </div>
         </div>
     </div>
 }
 
 @code {
-    private Transaction transaction = new System.Transactions.Transaction();
-    private string? tagsInput;
-    private bool isMessageVisible = false;
+    private Transactions transaction = new Transactions
+        {
+            Date = DateTime.Today, // Initialize with today's date
+            Category = "debit" // Default category
+        };
+
+    private string tagsInput = string.Empty;
     private string messageTitle = string.Empty;
     private string messageContent = string.Empty;
+    private bool isMessageVisible = false;
 
     private async Task HandleSubmit()
     {
         try
         {
-            // Get logged-in user's details
             var loggedInUser = UserServices.GetLoggedInUser();
             if (loggedInUser == null)
             {
@@ -103,18 +103,26 @@
             }
 
             transaction.UserName = loggedInUser.UserName;
-            transaction.Tags = tagsInput?.Split(',').Select(tag => tag.Trim()).ToList();
 
-            await TransactionService.AddTransactionAsync(transaction);
+            transaction.Tags = string.IsNullOrWhiteSpace(tagsInput)
+                ? new List<string>()
+                : tagsInput.Split(',').Select(tag => tag.Trim()).Where(tag => !string.IsNullOrEmpty(tag)).ToList();
 
-            messageTitle = "Success";
-            messageContent = "Cash out transaction added successfully!";
+            transaction.Id = Guid.NewGuid().ToString();
+
+            await TransactionService.AddCashOutAsync(transaction);
+
+            messageTitle = "Success!";
+            messageContent = "Cash out transaction added successfully.";
             isMessageVisible = true;
+
+            transaction = new Transactions { Date = DateTime.Today, Category = "debit" };
+            tagsInput = string.Empty;
         }
         catch (Exception ex)
         {
-            messageTitle = "Error";
-            messageContent = $"There was an issue: {ex.Message}";
+            messageTitle = "Error!";
+            messageContent = ex.Message;
             isMessageVisible = true;
         }
     }
@@ -122,6 +130,6 @@
     private void CloseMessageBox()
     {
         isMessageVisible = false;
-        Navigation.NavigateTo("/dashboard");
     }
 }
+ 

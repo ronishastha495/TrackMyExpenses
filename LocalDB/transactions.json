@@ -1,0 +1,14 @@
+[
+  {
+    "Id": "c94805d9-e031-46a2-b522-cbe91688ff4e",
+    "UserName": "ronisha",
+    "Amount": 100,
+    "Category": "credit",
+    "Title": null,
+    "Description": "sdf",
+    "Date": "2025-01-18T00:00:00+05:45",
+    "Notes": "dfdfas",
+    "Tags": [],
+    "TransactionType": "credit"
+  }
+]

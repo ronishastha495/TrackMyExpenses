@@ -1,76 +1,117 @@
 ﻿@page "/add-debt"
 @inject NavigationManager Navigation
-
 @using TrackMyExpenses.Model
 @using TrackMyExpenses.Services
 @inject UserServices UserServices
 
-<div class="flex justify-center items-center min-h-screen bg-gradient-to-b from-blue-200 via-purple-200 to-gray-100">
-    <div class="w-full max-w-lg bg-white p-8 rounded-lg shadow-lg">
-        <h2 class="text-2xl font-bold text-center text-gradient bg-clip-text text-transparent bg-gradient-to-r from-blue-500 to-purple-600 mb-6">Add Debt</h2>
+<div class="container-fluid py-5">
+    <div class="row justify-content-center">
+        <div class="col-md-8 col-lg-6">
+            <div class="card shadow-lg border-0 rounded">
+                <div class="card-header text-center bg-gradient-primary text-white py-4 rounded-top">
+                    <h2 class="mb-0">Add Debt</h2>
+                </div>
+                <div class="card-body p-4">
+                    @if (errorMessage != null)
+                    {
+                        <div class="alert alert-danger">
+                            @errorMessage
+                        </div>
+                    }
 
-        @if (errorMessage != null)
-        {
-            <div class="bg-red-100 text-red-700 p-4 rounded mb-4">
-                <p>@errorMessage</p>
-            </div>
-        }
+                    <EditForm Model="@debt" OnValidSubmit="HandleSubmit">
+                        <DataAnnotationsValidator />
+                        <ValidationSummary />
 
-        <EditForm Model="@debt" OnValidSubmit="HandleSubmit">
-            <DataAnnotationsValidator />
-            <ValidationSummary />
+                        <div class="mb-3">
+                            <label for="Source" class="form-label">Debt Source:</label>
+                            <InputText id="Source" @bind-Value="debt.Source" class="form-control" />
+                        </div>
 
-            <div class="mb-4">
-                <label for="Source" class="block text-sm font-medium text-gray-700">Debt Source:</label>
-                <InputText id="Source" @bind-Value="debt.Source" class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
-            </div>
+                        <div class="mb-3">
+                            <label for="Amount" class="form-label">Amount:</label>
+                            <InputNumber id="Amount" @bind-Value="debt.Amount" class="form-control" />
+                            <span class="form-text text-muted">@UserServices.GetPreferredCurrency()</span>
+                        </div>
 
-            <div class="mb-4">
-                <label for="Amount" class="block text-sm font-medium text-gray-700">Amount:</label>
-                <InputNumber id="Amount" @bind-Value="debt.Amount" class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
-                <span class="text-sm text-gray-500">@UserServices.GetPreferredCurrency()</span>
-            </div>
+                        <div class="mb-3">
+                            <label for="DueDate" class="form-label">Due Date:</label>
+                            <InputDate id="DueDate" @bind-Value="debt.DueDate" class="form-control" />
+                        </div>
 
-            <div class="mb-4">
-                <label for="DueDate" class="block text-sm font-medium text-gray-700">Due Date:</label>
-                <InputDate id="DueDate" @bind-Value="debt.DueDate" class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
-            </div>
+                        <div class="mb-3">
+                            <label for="Notes" class="form-label">Notes (Optional):</label>
+                            <InputTextArea id="Notes" @bind-Value="debt.Notes" class="form-control" rows="4" />
+                        </div>
 
-            <div class="mb-4">
-                <label for="Notes" class="block text-sm font-medium text-gray-700">Notes (Optional):</label>
-                <InputTextArea id="Notes" @bind-Value="debt.Notes" class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" rows="4" />
-            </div>
+                        <div class="mb-3">
+                            <label for="Tags" class="form-label">Tags (Optional):</label>
+                            <InputText id="Tags" @bind-Value="debt.Tags" class="form-control" />
+                        </div>
 
-            <div class="mb-4">
-                <label for="Tags" class="block text-sm font-medium text-gray-700">Tags (Optional):</label>
-                <InputText id="Tags" @bind-Value="debt.Tags" class="block w-full mt-1 border-gray-300 rounded-lg shadow-sm focus:ring-blue-500 focus:border-blue-500" />
-            </div>
-
-            <div class="text-center">
-                <button type="submit" class="w-full py-3 text-white font-bold rounded-lg bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg">
-                    Add Debt
-                </button>
-            </div>
-        </EditForm>
-
-        @if (isMessageVisible)
-        {
-            <div class="fixed inset-0 bg-black bg-opacity-50 flex justify-center items-center">
-                <div class="bg-white p-6 rounded-lg shadow-lg">
-                    <h5 class="text-xl font-bold mb-4">@messageTitle</h5>
-                    <p>@messageContent</p>
-                    <button class="mt-4 px-6 py-2 bg-gradient-to-r from-blue-500 to-purple-600 text-white font-bold rounded-lg" @onclick="CloseMessageBox">Close</button>
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-gradient-primary px-5 py-2 rounded-pill text-white">
+                                Add Debt
+                            </button>
+                        </div>
+                    </EditForm>
                 </div>
             </div>
-        }
+        </div>
     </div>
 </div>
 
+@if (isMessageVisible)
+{
+    <div class="modal-backdrop show"></div>
+    <div class="modal d-block" tabindex="-1">
+        <div class="modal-dialog modal-dialog-centered">
+            <div class="modal-content">
+                <div class="modal-header bg-gradient-primary text-white">
+                    <h5 class="modal-title">@messageTitle</h5>
+                </div>
+                <div class="modal-body">
+                    <p>@messageContent</p>
+                </div>
+                <div class="modal-footer">
+                    <button class="btn btn-gradient-primary" @onclick="CloseMessageBox">Close</button>
+                </div>
+            </div>
+        </div>
+    </div>
+}
+
 <style>
-    .text-gradient {
-        background: linear-gradient(to right, #3b82f6, #8b5cf6);
-        -webkit-background-clip: text;
-        -webkit-text-fill-color: transparent;
+    .bg-gradient-primary {
+        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+    }
+
+    .btn-gradient-primary {
+        background: linear-gradient(90deg, #6a11cb 0%, #2575fc 100%);
+        border: none;
+        transition: background 0.3s ease, transform 0.2s ease;
+    }
+
+        .btn-gradient-primary:hover {
+            background: linear-gradient(90deg, #2575fc 0%, #6a11cb 100%);
+            transform: scale(1.05);
+        }
+
+    .card {
+        background: #ffffff;
+        border-radius: 12px;
+        box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    .form-control {
+        border-radius: 8px;
+        border: 1px solid #dcdcdc;
+        padding: 10px;
+        font-size: 1rem;
+    }
+
+    .modal-content {
+        border-radius: 12px;
     }
 </style>
 
@@ -105,13 +146,12 @@
         }
         catch (Exception ex)
         {
-            errorMessage = $"Error: {ex.Message}";
+            errorMessage = $"An error occurred while adding debt: {ex.Message}";
         }
     }
 
     private void CloseMessageBox()
     {
         isMessageVisible = false;
-        Navigation.NavigateTo("/debt-payment");
     }
 }

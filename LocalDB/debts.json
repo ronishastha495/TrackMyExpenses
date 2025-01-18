@@ -1,0 +1,24 @@
+[
+  {
+    "debtId": "a3fe86b9-2d08-4fc6-bb1b-8bbe56076b63",
+    "UserName": "ronisha",
+    "Source": "sdaf",
+    "Amount": 200,
+    "PaidAmount": 0,
+    "DueDate": "2025-01-18T00:00:00+05:45",
+    "Notes": null,
+    "Tags": null,
+    "IsCleared": false
+  },
+  {
+    "debtId": "a3fe86b9-2d08-4fc6-bb1b-8bbe56076b63",
+    "UserName": "ronisha",
+    "Source": "sdaf",
+    "Amount": 200,
+    "PaidAmount": 0,
+    "DueDate": "2025-01-18T00:00:00+05:45",
+    "Notes": "sfda",
+    "Tags": "sdf",
+    "IsCleared": false
+  }
+]

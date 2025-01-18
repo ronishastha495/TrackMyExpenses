@@ -1,98 +1,123 @@
-﻿@page "/"
-@using TrackMyExpenses.Model
-@using TrackMyExpenses.Services
-
-@inject UserServices UserServices
+﻿@page "/register"
+@using TrackMyExpenses.Models
+@inject TrackMyExpenses.Services.UserServices UserServices
 @inject NavigationManager NavigationManager
 
-<div class="min-h-screen bg-gradient-to-r from-blue-500 to-purple-600 flex items-center justify-center">
-    <div class="w-full max-w-sm p-6 bg-white rounded-lg shadow-md">
-        <h3 class="text-center text-2xl font-semibold text-gray-800 mb-4">Login</h3>
+<div class="min-vh-100 d-flex align-items-center justify-content-center bg-gradient">
+    <div class="card shadow-lg" style="max-width: 400px; width: 100%;">
+        <div class="card-body">
+            <h3 class="text-center mb-4 text-primary">Register</h3>
 
-        <!-- Username Field -->
-        <div class="mb-4">
-            <label for="username" class="block text-sm font-medium text-gray-700">Username</label>
-            <input id="username" @bind="LoginUsername" placeholder="Enter your username"
-                class="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
-        </div>
+            <div class="mb-3">
+                <label for="username" class="form-label">Username</label>
+                <input id="username" @bind="RegisterUsername" class="form-control" placeholder="Username" />
+            </div>
 
-        <!-- Password Field -->
-        <div class="mb-4">
-            <label for="password" class="block text-sm font-medium text-gray-700">Password</label>
-            <input id="password" @bind="LoginPassword" type="password" placeholder="Enter your password"
-                class="w-full mt-2 p-2 border border-gray-300 rounded-lg focus:ring-blue-500 focus:border-blue-500" />
-        </div>
+            <div class="mb-3">
+                <label for="email" class="form-label">Email</label>
+                <input id="email" @bind="RegisterEmail" class="form-control" placeholder="Email" />
+            </div>
 
-        <!-- Login Button -->
-        <button @onclick="HandleLogin"
-            class="w-full py-2 px-4 bg-blue-500 hover:bg-blue-600 text-white font-bold rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-400">
-            Login
-        </button>
+            <div class="mb-3">
+                <label for="currency" class="form-label">Preferred Currency</label>
+                <select id="currency" @bind="PreferredCurrency" class="form-select">
+                    <option value="USD">USD</option>
+                    <option value="NRS">NRS</option>
+                </select>
+            </div>
 
-        <!-- Error Message Display -->
-        @if (!string.IsNullOrEmpty(Message))
-        {
-                <p class="text-red-500 text-sm mt-4">@Message</p>
-        }
+            <div class="mb-3">
+                <label for="password" class="form-label">Password</label>
+                <input id="password" @bind="RegisterPassword" type="password" class="form-control" placeholder="Password" />
+            </div>
 
-        <!-- Register Link -->
-        <div class="mt-6 text-center">
-            <p class="text-sm text-gray-600">
-                Don't have an account? <a href="#" @onclick="NavigateToRegister" class="text-blue-500 hover:underline">Register</a>
-            </p>
+            <button @onclick="HandleRegistration" class="btn btn-primary w-100 bg-gradient">
+                Register
+            </button>
+
+            <div class="text-center mt-3">
+                <p class="text-muted">
+                    Already have an account? <NavLink href="/" class="text-primary">Login here</NavLink>.
+                </p>
+            </div>
         </div>
     </div>
+
+    <!-- Dialog Box -->
+    @if (!string.IsNullOrEmpty(DialogMessage))
+    {
+        <div class="toast-container position-fixed top-0 end-0 p-3">
+            <div class="toast show text-white @DialogType" role="alert">
+                <div class="d-flex">
+                    <div class="toast-body">
+                        @DialogMessage
+                    </div>
+                    <button type="button" class="btn-close btn-close-white me-2 m-auto" aria-label="Close" @onclick="() => DialogMessage = string.Empty"></button>
+                </div>
+            </div>
+        </div>
+    }
 </div>
 
 @code {
-    private string LoginUsername = "";
-    private string LoginPassword = "";
-    private string Message = "";
+    private string RegisterUsername = "";
+    private string RegisterPassword = "";
+    private string RegisterEmail = "";
+    private string PreferredCurrency = "USD";
+    private string DialogMessage = "";
+    private string DialogType = "bg-success"; // Success or Error class
 
     private List<User> Users = new();
-    private string SelectedCurrency = "";
+
     protected override void OnInitialized()
     {
-        // Load existing users from UserServices
         Users = UserServices.LoadUsers();
     }
 
-    private async void HandleLogin()
+    private async Task HandleRegistration()
     {
-        // Check if all fields are filled
-        if (string.IsNullOrWhiteSpace(LoginUsername) || string.IsNullOrWhiteSpace(LoginPassword))
+        DialogMessage = "";
+
+        if (string.IsNullOrWhiteSpace(RegisterUsername) || string.IsNullOrWhiteSpace(RegisterPassword) || string.IsNullOrWhiteSpace(RegisterEmail))
         {
-            Message = "Username and password are required.";
+            ShowDialog("All fields are required.", isError: true);
             return;
         }
 
-        var user = Users.FirstOrDefault(u => u.UserName == LoginUsername);
-        if (user == null)
+        if (Users.Any(u => u.UserName == RegisterUsername))
         {
-            Message = "User not found.";
+            ShowDialog("Username already exists.", isError: true);
             return;
         }
 
-        if (!UserServices.ValidatePassword(LoginPassword, user.Password))
+        if (Users.Any(u => u.Email == RegisterEmail))
         {
-            Message = "Invalid password.";
+            ShowDialog("Email already in use.", isError: true);
             return;
         }
 
-        UserServices.SetLoggedInUser(user);
-        SelectedCurrency = user.PreferredCurrency;
+        var newUser = new User
+            {
+                UserName = RegisterUsername,
+                Password = UserServices.HashPassword(RegisterPassword),
+                Email = RegisterEmail,
+                PreferredCurrency = PreferredCurrency
+            };
 
-        // Successful login
-        Message = "Login successful. Redirecting to home...";
+        Users.Add(newUser);
+        UserServices.SaveUsers(Users);
 
-        // Redirect after a delay
+        ShowDialog("Registration successful. Redirecting to login...");
         await Task.Delay(2000);
-        NavigationManager.NavigateTo("/dashboard");
+        NavigationManager.NavigateTo("/");
     }
 
-    private void NavigateToRegister()
+    private async void ShowDialog(string message, bool isError = false)
     {
-        // Redirect to registration page
-        NavigationManager.NavigateTo("/register");
+        DialogType = isError ? "bg-danger" : "bg-success";
+        DialogMessage = message;
+        await Task.Delay(3000);
+        DialogMessage = "";
+        StateHasChanged();
     }
 }

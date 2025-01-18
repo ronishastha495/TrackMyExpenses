@@ -8,11 +8,11 @@ using System.Threading.Tasks;
 using System.Text.Json;
 using TrackMyExpenses.Models;
 
-namespace BudgetEase.Services
+namespace TrackMyExpenses.Services
 {
     public class UserServices
     {
-        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\TrackMyExpenses\LocalDB\users.json";
+        private const string FilePath = @"C:\Users\Ronisha Shrestha\Desktop\22085434_Ronisha Shrestha\TrackMyExpenses\LocalDB\users.json";
 
         private static User? _loggedInUser;
         public List<User> LoadUsers()

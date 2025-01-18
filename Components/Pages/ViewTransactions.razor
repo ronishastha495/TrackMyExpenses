@@ -1,174 +1,264 @@
 ﻿@page "/view-transactions"
-
 @using CsvHelper;
 @using CsvHelper.Configuration;
-@using OfficeOpenXml;
 @using System.Globalization;
 @using System.IO;
-@using TrackMyExpenses.Model;
-@using TrackMyExpenses.Services;
-@inject TransactionService TransactionService;
-@inject IJSRuntime JSRuntime;
-@inject UserServices UserServices;
-@inject CurrencyService CurrencyService;
+@using TrackMyExpenses.Model
+@using TrackMyExpenses.Services
+@inject TransactionService TransactionService
+@inject IJSRuntime JSRuntime
+@inject UserServices UserServices
+@inject CurrencyService CurrencyService
 
-<div class="p-6 bg-gray-100 min-h-screen">
-    <!-- Loading State -->
+
+
+<div class="transactions-container">
     @if (isLoading)
     {
-        <div class="flex justify-center items-center h-full">
-            <div class="animate-spin rounded-full h-12 w-12 border-t-4 border-blue-500"></div>
-            <p class="mt-3">Loading your transactions...</p>
+        <div class="loading-state">
+            <div class="spinner-border text-primary" role="status">
+                <span class="visually-hidden">Loading transactions...</span>
+            </div>
         </div>
     }
-
-    <!-- Content -->
-    <div class="container mx-auto">
-        <!-- Header -->
-        <div class="flex justify-between items-center mb-6">
-            <div>
-                <h1 class="text-2xl font-bold text-gray-700">Transactions</h1>
-                <p class="text-gray-500">View and manage your financial activity</p>
-            </div>
-            <div class="ml-auto space-x-4">
-                <button class="px-4 py-2 bg-purple-500 text-white rounded-lg hover:bg-purple-600 transition"
-                        @onclick="DownloadTransactionsCsv">
-                    Download Transactions CSV
-                </button>
-                <button class="px-4 py-2 bg-green-500 text-white rounded-lg hover:bg-green-600 transition"
-                        @onclick="DownloadTransactionsExcel">
-                    Download Transactions Excel
-                </button>
-            </div>
+    else if (error != null)
+    {
+        <div class="alert alert-danger shadow-sm" role="alert">
+            <h4 class="alert-heading">Error Loading Transactions</h4>
+            <p>@error</p>
+            <button class="btn btn-outline-danger" @onclick="RetryLoad">Retry</button>
         </div>
-
-        <!-- Summary Badges -->
-        <div class="flex justify-between items-center mb-4">
-            <span class="px-4 py-2 bg-green-100 text-green-600 rounded-lg">
-                Total Inflows: @ConvertToSelectedCurrency(inflows.Sum(t => t.Amount), SelectedCurrency) @SelectedCurrency
-            </span>
-            <span class="px-4 py-2 bg-red-100 text-red-600 rounded-lg">
-                Total Outflows: @ConvertToSelectedCurrency(outflows.Sum(t => t.Amount), SelectedCurrency) @SelectedCurrency
-            </span>
-        </div>
-
-        <!-- Filters -->
-        <div class="bg-white p-4 shadow-md rounded-lg mb-6">
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-4">
-                <input type="text"
-                       @bind="searchTerm"
-                       @bind:event="oninput"
-                       placeholder="Search transactions..."
-                       class="border-gray-300 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-                <select @bind="selectedCategory"
-                        class="border-gray-300 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400">
-                    <option value="">All Types</option>
-                    <option value="credit">Inflows</option>
-                    <option value="debit">Outflows</option>
-                </select>
-                <input type="date"
-                       @bind="startDate"
-                       class="border-gray-300 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
-                <input type="date"
-                       @bind="endDate"
-                       class="border-gray-300 border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-400" />
+    }
+    else
+    {
+        <div class="container-fluid py-4">
+            <div class="text-end mb-4">
+                <button class="btn btn-primary" @onclick="DownloadTransactionsCsv">Download Transactions CSV</button>
             </div>
-        </div>
 
-        <!-- Transactions List -->
-        @if (!inflows.Any() && !outflows.Any())
-        {
-            <div class="text-center py-12">
-                <i class="bi bi-wallet2 text-6xl text-gray-300 mb-4"></i>
-                <h3 class="text-xl font-semibold text-gray-700">No Transactions Yet</h3>
-                <p class="text-gray-500">Start adding transactions to track your financial activity</p>
-                <a href="/add-transaction"
-                   class="mt-4 inline-block px-4 py-2 bg-blue-500 text-white rounded hover:bg-blue-600 transition">
-                    Add Your First Transaction
-                </a>
-            </div>
-        }
-        else
-        {
-            <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
-                <!-- Inflows -->
-                @if (string.IsNullOrEmpty(selectedCategory) || selectedCategory == "credit")
-                {
-                    <div class="bg-white shadow-md rounded-lg">
-                        <div class="bg-green-100 p-4 rounded-t-lg flex justify-between items-center">
-                            <h3 class="text-green-600 font-semibold">
-                                <i class="bi bi-arrow-down-circle mr-2"></i>Inflows
-                            </h3>
-                            <span class="bg-green-200 text-green-700 px-3 py-1 rounded-full">@filteredInflows.Count() items</span>
-                        </div>
-                        <div class="p-4">
-                            @if (!filteredInflows.Any())
-                            {
-                                <p class="text-center text-gray-500">No matching inflow transactions found</p>
-                            }
-                            else
-                            {
-                                <ul class="divide-y divide-gray-200">
-                                    @foreach (var transaction in filteredInflows)
-                                    {
-                                        <li class="py-3 flex justify-between">
-                                            <div>
-                                                <p class="font-medium text-gray-800">@transaction.Description</p>
-                                                <div class="text-sm text-gray-500">@transaction.Date.ToShortDateString() - @transaction.Date.ToString("HH:mm")</div>
-                                            </div>
-                                            <span class="font-bold text-green-600">
-                                                @ConvertToSelectedCurrency(transaction.Amount, SelectedCurrency) @SelectedCurrency
-                                            </span>
-                                        </li>
-                                    }
-                                </ul>
-                            }
+            <!-- Header Section -->
+            <div class="row align-items-center mb-4">
+                <div class="col">
+                    <h1 class="display-5 mb-0">Transactions</h1>
+                    <p class="text-muted mb-0">View and manage your financial activity</p>
+                </div>
+                <div class="col-auto">
+                    <div class="summary-badges">
+                        <div class="summary-badges">
+                            <span class="badge bg-success-subtle text-success me-2">
+                                Total Inflows: @ConvertToSelectedCurrency(inflows.Sum(t => t.Amount), SelectedCurrency) @SelectedCurrency
+                            </span>
+                            <span class="badge bg-danger-subtle text-danger">
+                                Total Outflows: @ConvertToSelectedCurrency(outflows.Sum(t => t.Amount), SelectedCurrency) @SelectedCurrency
+                            </span>
                         </div>
                     </div>
-                }
+                </div>
+            </div>
 
-                <!-- Outflows -->
-                @if (string.IsNullOrEmpty(selectedCategory) || selectedCategory == "debit")
-                {
-                    <div class="bg-white shadow-md rounded-lg">
-                        <div class="bg-red-100 p-4 rounded-t-lg flex justify-between items-center">
-                            <h3 class="text-red-600 font-semibold">
-                                <i class="bi bi-arrow-up-circle mr-2"></i>Outflows
-                            </h3>
-                            <span class="bg-red-200 text-red-700 px-3 py-1 rounded-full">@filteredOutflows.Count() items</span>
+            <!-- Filter Section -->
+            <div class="filter-section card shadow-sm mb-4 rounded-3">
+                <div class="card-body">
+                    <div class="row g-3">
+                        <div class="col-12 col-md-4">
+                            <div class="search-box position-relative">
+                                <i class="bi bi-search position-absolute ps-3 pt-2 text-muted"></i>
+                                <input type="text"
+                                       @bind="searchTerm"
+                                       @bind:event="oninput"
+                                       placeholder="Search transactions..."
+                                       class="form-control ps-5" />
+                            </div>
                         </div>
-                        <div class="p-4">
-                            @if (!filteredOutflows.Any())
-                            {
-                                <p class="text-center text-gray-500">No matching outflow transactions found</p>
-                            }
-                            else
-                            {
-                                <ul class="divide-y divide-gray-200">
-                                    @foreach (var transaction in filteredOutflows)
-                                    {
-                                        <li class="py-3 flex justify-between">
-                                            <div>
-                                                <p class="font-medium text-gray-800">@transaction.Description</p>
-                                                <div class="text-sm text-gray-500">@transaction.Date.ToShortDateString() - @transaction.Date.ToString("HH:mm")</div>
-                                            </div>
-                                            <span class="font-bold text-red-600">
-                                                @ConvertToSelectedCurrency(transaction.Amount, SelectedCurrency) @SelectedCurrency
-                                            </span>
-                                        </li>
-                                    }
-                                </ul>
-                            }
+                        <div class="col-12 col-md-2">
+                            <select @bind="selectedCategory" class="form-select">
+                                <option value="">All Types</option>
+                                <option value="credit">Inflows</option>
+                                <option value="debit">Outflows</option>
+                            </select>
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <input type="date"
+                                   @bind="startDate"
+                                   class="form-control"
+                                   placeholder="Start Date" />
+                        </div>
+                        <div class="col-12 col-md-3">
+                            <input type="date"
+                                   @bind="endDate"
+                                   class="form-control"
+                                   placeholder="End Date" />
                         </div>
                     </div>
-                }
+                </div>
             </div>
-        }
-    </div>
+
+            @if (!inflows.Any() && !outflows.Any())
+            {
+                <div class="empty-state text-center py-5">
+                    <i class="bi bi-wallet2 display-1 text-muted mb-3"></i>
+                    <h3>No Transactions Yet</h3>
+                    <p class="text-muted">Start adding transactions to track your financial activity</p>
+                    <a href="/add-transaction" class="btn btn-primary mt-2">
+                        Add Your First Transaction
+                    </a>
+                </div>
+            }
+            else
+            {
+                <div class="row">
+                    <!-- Cash Inflows -->
+                    @if (string.IsNullOrEmpty(selectedCategory) || selectedCategory == "credit")
+                    {
+                        <div class="col-12 @(string.IsNullOrEmpty(selectedCategory) ? "col-lg-6" : "col-lg-8 mx-auto") mb-4">
+                            <div class="transaction-card card h-100 shadow-sm rounded-3">
+                                <div class="card-header bg-success bg-opacity-10 d-flex justify-content-between align-items-center rounded-top-3">
+                                    <h3 class="card-title text-success mb-0">
+                                        <i class="bi bi-arrow-down-circle me-2"></i>Inflows
+                                    </h3>
+                                    <span class="badge bg-success-subtle text-success">
+                                        @filteredInflows.Count() items
+                                    </span>
+                                </div>
+                                <div class="card-body p-0">
+                                    @if (!filteredInflows.Any())
+                                    {
+                                        <div class="text-center py-4">
+                                            <p class="text-muted mb-0">No matching inflow transactions found</p>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <ul class="list-unstyled m-0">
+                                            @foreach (var transaction in filteredInflows)
+                                            {
+                                                <li class="transaction-item p-3 border-bottom">
+                                                    <div class="card border-start border-success border-4 shadow-sm rounded-3">
+                                                        <div class="card-body">
+                                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                                <span class="h5 text-success mb-0">
+                                                                    @ConvertToSelectedCurrency(@transaction.Amount, @SelectedCurrency) @SelectedCurrency
+                                                                </span>
+                                                                <div class="text-end">
+                                                                    <small class="text-muted d-block">
+                                                                        @transaction.Date.ToShortDateString()
+                                                                    </small>
+                                                                    <small class="text-muted">
+                                                                        @transaction.Date.ToString("HH:mm")
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                            <p class="mb-2">@transaction.Description</p>
+                                                            <div class="tags">
+                                                                @foreach (var tag in transaction.Tags)
+                                                                {
+                                                                    <span class="badge bg-light text-secondary me-1">
+                                                                        <i class="bi bi-tag me-1"></i>@tag
+                                                                    </span>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+
+                    <!-- Cash Outflows -->
+                    @if (string.IsNullOrEmpty(selectedCategory) || selectedCategory == "debit")
+                    {
+                        <div class="col-12 @(string.IsNullOrEmpty(selectedCategory) ? "col-lg-6" : "col-lg-8 mx-auto") mb-4">
+                            <div class="transaction-card card h-100 shadow-sm rounded-3">
+                                <div class="card-header bg-danger bg-opacity-10 d-flex justify-content-between align-items-center rounded-top-3">
+                                    <h3 class="card-title text-danger mb-0">
+                                        <i class="bi bi-arrow-up-circle me-2"></i>Outflows
+                                    </h3>
+                                    <span class="badge bg-danger-subtle text-danger">
+                                        @filteredOutflows.Count() items
+                                    </span>
+                                </div>
+                                <div class="card-body p-0">
+                                    @if (!filteredOutflows.Any())
+                                    {
+                                        <div class="text-center py-4">
+                                            <p class="text-muted mb-0">No matching outflow transactions found</p>
+                                        </div>
+                                    }
+                                    else
+                                    {
+                                        <ul class="list-unstyled m-0">
+                                            @foreach (var transaction in filteredOutflows)
+                                            {
+                                                <li class="transaction-item p-3 border-bottom">
+                                                    <div class="card border-start border-danger border-4 shadow-sm rounded-3">
+                                                        <div class="card-body">
+                                                            <div class="d-flex justify-content-between align-items-start mb-2">
+                                                                <span class="h5 text-danger mb-0">
+                                                                    @ConvertToSelectedCurrency(@transaction.Amount, SelectedCurrency) @SelectedCurrency
+                                                                </span>
+                                                                <div class="text-end">
+                                                                    <small class="text-muted d-block">
+                                                                        @transaction.Date.ToShortDateString()
+                                                                    </small>
+                                                                    <small class="text-muted">
+                                                                        @transaction.Date.ToString("HH:mm")
+                                                                    </small>
+                                                                </div>
+                                                            </div>
+                                                            <p class="mb-2">@transaction.Description</p>
+                                                            <div class="tags">
+                                                                @foreach (var tag in transaction.Tags)
+                                                                {
+                                                                    <span class="badge bg-light text-secondary me-1">
+                                                                        <i class="bi bi-tag me-1"></i>@tag
+                                                                    </span>
+                                                                }
+                                                            </div>
+                                                        </div>
+                                                    </div>
+                                                </li>
+                                            }
+                                        </ul>
+                                    }
+                                </div>
+                            </div>
+                        </div>
+                    }
+                </div>
+            }
+        </div>
+    }
 </div>
+
+<style>
+    .transactions-container {
+        background: linear-gradient(to right, #4e54c8, #8f94fb);
+        padding: 2rem;
+        border-radius: 1rem;
+    }
+
+    .transaction-card {
+        border-radius: 1rem;
+    }
+
+    .transaction-item {
+        border-radius: 1rem;
+    }
+
+    .card-header {
+        border-top-left-radius: 1rem;
+        border-top-right-radius: 1rem;
+    }
+</style>
+
 
 @code {
     private string SelectedCurrency;
+
 
     private List<Transactions> inflows = new();
     private List<Transactions> outflows = new();
@@ -212,16 +302,16 @@
             var transactions = await TransactionService.LoadTransactionsAsync();
 
             inflows = transactions
-                .Where(t => t.Category == "credit")
+                .Where(t => t.UserName == loggedInUser.UserName && t.Category == "credit")
                 .ToList();
-
             outflows = transactions
-                .Where(t => t.Category == "debit")
+                .Where(t => t.UserName == loggedInUser.UserName && t.Category == "debit")
                 .ToList();
         }
         catch (Exception ex)
         {
-            error = $"Failed to load transactions: {ex.Message}";
+            error = "Unable to load transactions. Please try again later.";
+            Console.WriteLine($"Error loading transactions: {ex.Message}");
         }
         finally
         {
@@ -246,9 +336,10 @@
             await csvWriter.NextRecordAsync();
             await csvWriter.WriteRecordsAsync(transactions);
 
-            streamWriter.Flush();
-            var fileBytes = memoryStream.ToArray();
-            var base64 = Convert.ToBase64String(fileBytes);
+            await streamWriter.FlushAsync();
+
+            var bytes = memoryStream.ToArray();
+            var base64 = Convert.ToBase64String(bytes);
             var fileName = "transactions.csv";
 
             await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64);
@@ -259,53 +350,56 @@
         }
     }
 
-    private async Task DownloadTransactionsExcel()
+    private async Task RefreshData(string userName)
     {
         try
         {
-            var transactions = inflows.Concat(outflows).OrderByDescending(t => t.Date).ToList();
+            isLoading = true;
+            error = null;
 
-            using var package = new ExcelPackage();
-            var worksheet = package.Workbook.Worksheets.Add("Transactions");
+            // Fetch all transactions again
+            var transactions = await TransactionService.LoadTransactionsAsync();
 
-            // Write header row
-            worksheet.Cells[1, 1].Value = "Description";
-            worksheet.Cells[1, 2].Value = "Category";
-            worksheet.Cells[1, 3].Value = "Amount";
-            worksheet.Cells[1, 4].Value = "Date";
-            worksheet.Cells[1, 5].Value = "Tags";
+            // Filter transactions based on the provided userName and update inflows and outflows
+            inflows = transactions
+                .Where(t => t.UserName == userName && t.Category == "credit")
+                .ToList();
 
-            // Write transaction data
-            int row = 2;
-            foreach (var transaction in transactions)
-            {
-                worksheet.Cells[row, 1].Value = transaction.Description;
-                worksheet.Cells[row, 2].Value = transaction.Category;
-                worksheet.Cells[row, 3].Value = transaction.Amount;
-                worksheet.Cells[row, 4].Value = transaction.Date.ToString("yyyy-MM-dd HH:mm");
-                worksheet.Cells[row, 5].Value = string.Join(", ", transaction.Tags ?? new List<string>());
-                row++;
-            }
-
-            // AutoFit columns for better readability
-            worksheet.Cells[worksheet.Dimension.Address].AutoFitColumns();
-
-            // Convert the package to a byte array and download it
-            var fileBytes = package.GetAsByteArray();
-            var base64 = Convert.ToBase64String(fileBytes);
-            var fileName = "transactions.xlsx";
-
-            await JSRuntime.InvokeVoidAsync("downloadFile", fileName, base64);
+            outflows = transactions
+                .Where(t => t.UserName == userName && t.Category == "debit")
+                .ToList();
         }
         catch (Exception ex)
         {
-            error = $"Failed to export Excel: {ex.Message}";
+            error = "Failed to refresh transactions. Please try again later.";
+            Console.WriteLine($"Error refreshing data for user {userName}: {ex.Message}");
+        }
+        finally
+        {
+            isLoading = false;
         }
     }
 
-    private string ConvertToSelectedCurrency(decimal amount, string currency)
+
+    private async Task ChangeCurrency(ChangeEventArgs e)
     {
-        // Logic to convert amount based on the selected currency (use CurrencyService)
-        return amount.ToString("F2"); // Placeholder
+        SelectedCurrency = e.Value?.ToString() ?? "USD";
+        CurrencyService.PreferredCurrency = SelectedCurrency;
+
+        Console.WriteLine($"[DEBUG] Currency changed to: {SelectedCurrency}");
+        await RefreshData(UserServices.GetLoggedInUser().UserName);
+    }
+
+    private decimal ConvertToSelectedCurrency(decimal amount, string currency)
+    {
+        var convertedAmount = CurrencyService.ConvertAmount(amount, currency);
+        Console.WriteLine($"[DEBUG] Conversion: {amount} {CurrencyService.PreferredCurrency} -> {convertedAmount}");
+        return convertedAmount;
+    }
+
+    private async Task RetryLoad()
+    {
+        await LoadData();
     }
 }
+
